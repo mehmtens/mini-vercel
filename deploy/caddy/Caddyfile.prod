@@ -1,0 +1,73 @@
+# ==============================================================================
+# Mini-Vercel Production Caddyfile (HTTPS + On-Demand TLS + Gateway)
+# ==============================================================================
+{
+	email {$ACME_EMAIL:admin@mini-vercel.app}
+	on_demand_tls {
+		ask http://api:8080/api/tls/ask
+		interval 2m
+		burst 5
+	}
+}
+
+# ------------------------------------------------------------------------------
+# 1. Main Management Dashboard & API
+# ------------------------------------------------------------------------------
+{$APP_DOMAIN:app.mini-vercel.app} {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options nosniff
+		X-Frame-Options SAMEORIGIN
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+
+	# Fastify REST API & Webhooks
+	handle /api/* {
+		reverse_proxy api:8080 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+
+	handle /health* {
+		reverse_proxy api:8080
+	}
+
+	# Next.js Management Frontend Dashboard
+	handle /* {
+		reverse_proxy web:3000 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+}
+
+# ------------------------------------------------------------------------------
+# 2. Dynamic Preview & Project Custom Domains (On-Demand TLS with Ask validation)
+# Resolves immutable static assets through Fastify Artifact Gateway
+# ------------------------------------------------------------------------------
+:443 {
+	tls {
+		on_demand
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+
+	handle {
+		reverse_proxy api:8080 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+}

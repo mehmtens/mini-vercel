@@ -1,0 +1,57 @@
+# ==============================================================================
+# Mini-Vercel Development Caddyfile (Local HTTP Mode)
+# ==============================================================================
+{
+	admin off
+	auto_https off
+}
+
+# ------------------------------------------------------------------------------
+# 1. Main Management Dashboard & API (localhost, app.localhost)
+# ------------------------------------------------------------------------------
+localhost:80, app.localhost:80 {
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options SAMEORIGIN
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+
+	# Fastify REST API & Webhooks
+	handle /api/* {
+		reverse_proxy api:8080 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+
+	handle /health* {
+		reverse_proxy api:8080
+	}
+
+	# Next.js Frontend Dashboard UI
+	handle /* {
+		reverse_proxy web:3000 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+}
+
+# ------------------------------------------------------------------------------
+# 2. Dynamic Preview & Deployment Subdomains (*.localhost)
+# Routed through Fastify Artifact Gateway for authorized private S3 resolution
+# ------------------------------------------------------------------------------
+*.localhost:80 {
+	handle {
+		reverse_proxy api:8080 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+}

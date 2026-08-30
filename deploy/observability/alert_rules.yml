@@ -1,0 +1,75 @@
+# ==============================================================================
+# Prometheus Alerting Rules for Mini-Vercel
+# ==============================================================================
+groups:
+  - name: mini_vercel_alerts
+    rules:
+      # 1. Dependency Outage Alert (Uses internal Application Gauge mini_vercel_dependency_up_gauge)
+      - alert: DependencyUnhealthy
+        expr: mini_vercel_dependency_up_gauge == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Core dependency {{ $labels.dependency }} is DOWN"
+          description: "Mini-Vercel /health/ready check detected that {{ $labels.dependency }} has been unavailable for more than 1 minute."
+
+      # 2. High HTTP 5xx Error Rate
+      - alert: HighErrorRate
+        expr: (sum(rate(http_requests_total{status_code=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High 5xx HTTP Error Rate (> 5%)"
+          description: "Fastify API 5xx error rate has exceeded 5% over a 5-minute rolling window."
+
+      # 3. Queue Backlog Stall / Worker Starvation
+      - alert: QueueBacklogStall
+        expr: mini_vercel_queue_waiting_jobs_gauge > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Build Queue Backlog Stalled"
+          description: "More than 10 deployment jobs have been waiting in BullMQ queue for over 5 minutes."
+
+      # 4. Slow Build Execution Duration (p95 > 5 minutes)
+      - alert: SlowBuildDuration
+        expr: histogram_quantile(0.95, sum(rate(mini_vercel_build_duration_seconds_bucket[10m])) by (le)) > 300
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 Build Duration is exceeding 5 minutes"
+          description: "The 95th percentile of build execution times is over 300 seconds."
+
+      # 5. High API Latency (p95 > 2s)
+      - alert: APIHighLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 2
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API Latency (p95 > 2s)"
+          description: "Fastify API response latency 95th percentile has exceeded 2 seconds."
+
+      # 6. Stale Database / S3 Backup Alert (> 24 hours without successful backup)
+      - alert: BackupStale
+        expr: (time() - mini_vercel_backup_last_success_timestamp_seconds) > 86400
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backup for {{ $labels.target }} is older than 24 hours"
+          description: "Automated backup job for {{ $labels.target }} has not reported success in the last 24 hours."
+
+      # 7. Cleanup Job Errors
+      - alert: CleanupErrorsDetected
+        expr: increase(mini_vercel_cleanup_errors_total[1h]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Errors encountered in background cleanup for {{ $labels.component }}"
+          description: "Resource garbage collection job reported {{ $value }} errors in component {{ $labels.component }}."

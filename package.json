@@ -1,0 +1,35 @@
+{
+  "name": "mini-vercel-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mini-Vercel Monorepo: Fastify API, Next.js Web, BullMQ Worker, PostgreSQL, Redis, MinIO, Caddy",
+  "packageManager": "pnpm@11.22.0",
+  "engines": {
+    "node": "^20.0.0 || ^22.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "clean": "turbo run clean",
+    "docker:up": "docker compose -f deploy/docker-compose.yml up -d",
+    "docker:down": "docker compose -f deploy/docker-compose.yml down",
+    "docker:logs": "docker compose -f deploy/docker-compose.yml logs -f",
+    "docker:config": "docker compose -f deploy/docker-compose.yml config"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "@typescript-eslint/eslint-plugin": "^8.11.0",
+    "@typescript-eslint/parser": "^8.11.0",
+    "eslint": "^8.57.1",
+    "prettier": "^3.3.3",
+    "turbo": "^2.1.3",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.3"
+  }
+}

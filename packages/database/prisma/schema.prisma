@@ -1,0 +1,251 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ----------------------------------------
+// ENUM TANIMLARI
+// ----------------------------------------
+
+enum EnvTarget {
+  PRODUCTION
+  PREVIEW
+  ALL
+
+  @@map("env_target")
+}
+
+enum DeploymentStatus {
+  QUEUED
+  INITIALIZING
+  CLONING
+  BUILDING
+  UPLOADING
+  DEPLOYING
+  READY
+  FAILED
+  CANCELLED
+
+  @@map("deployment_status")
+}
+
+enum DeploymentTrigger {
+  WEBHOOK_PUSH
+  MANUAL
+  ROLLBACK
+
+  @@map("deployment_trigger")
+}
+
+enum LogStream {
+  STDOUT
+  STDERR
+
+  @@map("log_stream")
+}
+
+enum AuditOperation {
+  PROMOTE
+  ROLLBACK
+
+  @@map("audit_operation")
+}
+
+// ----------------------------------------
+// MODEL TANIMLARI
+// ----------------------------------------
+
+model User {
+  id                   String   @id @default(uuid()) @db.Uuid
+  githubId             String   @unique @map("github_id") @db.VarChar(64)
+  username             String   @db.VarChar(128)
+  email                String   @unique @db.VarChar(255)
+  avatarUrl            String?  @map("avatar_url") @db.Text
+  encryptedAccessToken String?  @map("encrypted_access_token") @db.Text
+  accessTokenIv        String?  @map("access_token_iv") @db.VarChar(64)
+  accessTokenTag       String?  @map("access_token_tag") @db.VarChar(64)
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  projects      Project[]
+  installations GithubInstallation[]
+
+  @@map("users")
+}
+
+model Project {
+  id                  String   @id @default(uuid()) @db.Uuid
+  userId              String   @map("user_id") @db.Uuid
+  installationId      String?  @map("installation_id") @db.Uuid
+  githubRepoId        BigInt?  @map("github_repo_id")
+  name                String   @db.VarChar(128)
+  slug                String   @unique @db.VarChar(128)
+  repoName            String   @map("repo_name") @db.VarChar(255)
+  repoUrl             String   @map("repo_url") @db.Text
+  branch              String   @default("main") @db.VarChar(128)
+  rootDirectory       String   @default("/") @map("root_directory") @db.VarChar(255)
+  buildCommand        String   @default("npm run build") @map("build_command") @db.VarChar(255)
+  outputDirectory     String   @default("dist") @map("output_directory") @db.VarChar(255)
+  installCommand      String   @default("npm install") @map("install_command") @db.VarChar(255)
+  framework           String   @default("auto") @db.VarChar(64)
+  currentDeploymentId String?  @map("current_deployment_id") @db.Uuid
+  version             Int      @default(1)
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  installation      GithubInstallation? @relation(fields: [installationId], references: [id], onDelete: SetNull)
+  currentDeployment Deployment?         @relation("CurrentDeployment", fields: [currentDeploymentId], references: [id], onDelete: SetNull)
+  deployments       Deployment[]        @relation("ProjectDeployments")
+  envVars           ProjectEnvVar[]
+  audits            DeploymentAudit[]
+
+  @@unique([userId, name])
+  @@index([userId], name: "idx_projects_user_id")
+  @@index([slug], name: "idx_projects_slug")
+  @@index([installationId], name: "idx_projects_installation_id")
+  @@map("projects")
+}
+
+model ProjectEnvVar {
+  id             String    @id @default(uuid()) @db.Uuid
+  projectId      String    @map("project_id") @db.Uuid
+  key            String    @db.VarChar(255)
+  encryptedValue String    @map("encrypted_value") @db.Text
+  iv             String    @db.VarChar(64)
+  target         EnvTarget @default(ALL)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, key, target])
+  @@index([projectId, target], name: "idx_env_vars_project_target")
+  @@map("project_env_vars")
+}
+
+model Deployment {
+  id              String            @id @default(uuid()) @db.Uuid
+  projectId       String            @map("project_id") @db.Uuid
+  status          DeploymentStatus  @default(QUEUED)
+  trigger         DeploymentTrigger @default(WEBHOOK_PUSH)
+  commitHash      String?           @map("commit_hash") @db.VarChar(64)
+  commitMessage   String?           @map("commit_message") @db.Text
+  senderUsername  String?           @map("sender_username") @db.VarChar(128)
+  branch          String            @db.VarChar(128)
+  s3Prefix        String?           @map("s3_prefix") @db.Text
+  previewUrl      String?           @map("preview_url") @db.Text
+  buildDurationMs Int?              @map("build_duration_ms")
+  errorMessage    String?           @map("error_message") @db.Text
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  project           Project           @relation("ProjectDeployments", fields: [projectId], references: [id], onDelete: Cascade)
+  activeForProjects Project[]         @relation("CurrentDeployment")
+  events            DeploymentEvent[]
+  logs              DeploymentLog[]
+
+  @@index([projectId, createdAt(sort: Desc)], name: "idx_deployments_project_created")
+  @@index([status], name: "idx_deployments_status")
+  @@map("deployments")
+}
+
+model DeploymentEvent {
+  id           String            @id @default(uuid()) @db.Uuid
+  deploymentId String            @map("deployment_id") @db.Uuid
+  fromStatus   DeploymentStatus? @map("from_status")
+  toStatus     DeploymentStatus  @map("to_status")
+  eventMessage String?           @map("event_message") @db.Text
+  timestamp    DateTime          @default(now()) @db.Timestamptz(6)
+
+  deployment Deployment @relation(fields: [deploymentId], references: [id], onDelete: Cascade)
+
+  @@index([deploymentId, timestamp(sort: Asc)], name: "idx_deployment_events_time")
+  @@map("deployment_events")
+}
+
+model DeploymentLog {
+  id           BigInt    @id @default(autoincrement())
+  deploymentId String    @map("deployment_id") @db.Uuid
+  logChunk     String    @map("log_chunk") @db.Text
+  stream       LogStream @default(STDOUT)
+  sequence     Int
+  timestamp    DateTime  @default(now()) @db.Timestamptz(6)
+
+  deployment Deployment @relation(fields: [deploymentId], references: [id], onDelete: Cascade)
+
+  @@unique([deploymentId, sequence])
+  @@index([deploymentId, sequence(sort: Asc)], name: "idx_deployment_logs_seq")
+  @@map("deployment_logs")
+}
+
+model DeploymentAudit {
+  id              String         @id @default(uuid()) @db.Uuid
+  projectId       String         @map("project_id") @db.Uuid
+  actorId         String         @map("actor_id") @db.VarChar(128)
+  operation       AuditOperation
+  oldDeploymentId String?        @map("old_deployment_id") @db.Uuid
+  newDeploymentId String         @map("new_deployment_id") @db.Uuid
+  timestamp       DateTime       @default(now()) @db.Timestamptz(6)
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, timestamp(sort: Desc)], name: "idx_deployment_audits_project_time")
+  @@map("deployment_audits")
+}
+
+model GithubInstallation {
+  id             String                @id @default(uuid()) @db.Uuid
+  installationId BigInt                @unique @map("installation_id")
+  accountLogin   String                @map("account_login") @db.VarChar(128)
+  accountId      BigInt                @map("account_id")
+  accountType    String                @default("User") @map("account_type") @db.VarChar(32)
+  userId         String                @map("user_id") @db.Uuid
+  permissions    String?               @db.Text
+  status         String                @default("ACTIVE") @db.VarChar(32)
+  createdAt      DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user           User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  repositories   GithubAppRepository[]
+  projects       Project[]
+
+  @@index([userId], name: "idx_github_installations_user")
+  @@index([installationId], name: "idx_github_installations_id")
+  @@map("github_installations")
+}
+
+model GithubAppRepository {
+  id             String             @id @default(uuid()) @db.Uuid
+  installationId String             @map("installation_id") @db.Uuid
+  githubRepoId   BigInt             @map("github_repo_id")
+  name           String             @db.VarChar(128)
+  fullName       String             @map("full_name") @db.VarChar(255)
+  private        Boolean            @default(false)
+  defaultBranch  String             @default("main") @map("default_branch") @db.VarChar(128)
+  cloneUrl       String?            @map("clone_url") @db.Text
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  installation   GithubInstallation @relation(fields: [installationId], references: [id], onDelete: Cascade)
+
+  @@unique([installationId, githubRepoId])
+  @@index([fullName], name: "idx_github_app_repos_full_name")
+  @@map("github_app_repositories")
+}
+
+model WebhookDelivery {
+  id           String   @id @default(uuid()) @db.Uuid
+  deliveryId   String   @unique @map("delivery_id") @db.VarChar(128)
+  event        String   @db.VarChar(64)
+  repoFullName String?  @map("repo_full_name") @db.VarChar(255)
+  status       String   @default("PROCESSED") @db.VarChar(32)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([deliveryId], name: "idx_webhook_deliveries_delivery_id")
+  @@map("webhook_deliveries")
+}

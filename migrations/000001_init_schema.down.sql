@@ -1,0 +1,4 @@
+-- Rollback migration
+DROP TABLE IF EXISTS build_logs CASCADE;
+DROP TABLE IF EXISTS deployments CASCADE;
+DROP TABLE IF EXISTS projects CASCADE;

@@ -1,0 +1,10 @@
+[Unit]
+Description=Timer for Mini-Vercel PostgreSQL Automated Backup (Every 6 hours)
+
+[Timer]
+OnCalendar=*-*-* 00,06,12,18:00:00
+Persistent=true
+Unit=mini-vercel-backup-db.service
+
+[Install]
+WantedBy=timers.target

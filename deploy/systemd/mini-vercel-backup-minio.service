@@ -1,0 +1,12 @@
+[Unit]
+Description=Mini-Vercel MinIO / S3 Artifacts Backup Job
+After=network.target docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/mini-vercel
+EnvironmentFile=-/opt/mini-vercel/.env
+ExecStart=/bin/bash /opt/mini-vercel/scripts/backup-minio.sh
+StandardOutput=journal
+StandardError=journal
+User=root

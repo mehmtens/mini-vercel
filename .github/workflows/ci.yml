@@ -1,0 +1,187 @@
+name: CI Pipeline
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    name: Build, Lint, Typecheck & Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mini_vercel
+        ports:
+          - 5435:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      NODE_ENV: test
+      CI: "true"
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5435/mini_vercel
+      REDIS_URL: redis://127.0.0.1:6379
+      MINIO_ENDPOINT: 127.0.0.1
+      MINIO_PORT: "9000"
+      MINIO_USE_SSL: "false"
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET_BUILDS: mini-vercel-builds
+      CRYPTO_MASTER_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+      GITHUB_WEBHOOK_SECRET: dev_webhook_secret_key_12345
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks Secret Scanner
+        uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup pnpm (Package Manager)
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.22.0
+          run_install: false
+
+      - name: Setup Node.js 20 LTS with pnpm Cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Dependency Security Audit
+        run: pnpm audit --audit-level=high || true
+
+      - name: Start MinIO Server (Pinned Release)
+        run: |
+          docker run -d --name minio-server \
+            -p 9000:9000 \
+            -p 9001:9001 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio:RELEASE.2024-01-18T22-51-28Z server /data --console-address ":9001"
+
+      - name: Wait for MinIO Server Readiness (Bounded Retry Probe)
+        run: |
+          node -e '
+            async function waitForMinio() {
+              const maxAttempts = 30;
+              for (let i = 1; i <= maxAttempts; i++) {
+                try {
+                  const res = await fetch("http://127.0.0.1:9000/minio/health/live");
+                  if (res.ok) {
+                    console.log(`MinIO server is ready on attempt ${i}`);
+                    process.exit(0);
+                  }
+                } catch {
+                  // retry
+                }
+                await new Promise(r => setTimeout(r, 1000));
+              }
+              console.error("MinIO failed to become ready within 30 seconds");
+              process.exit(1);
+            }
+            waitForMinio();
+          '
+
+      - name: Generate Prisma Client & Sync Schema
+        run: |
+          pnpm --filter @mini-vercel/database prisma:generate
+          pnpm --filter @mini-vercel/database db:push
+
+      - name: Bootstrap MinIO Builds Bucket & Verify Presence
+        run: |
+          node -e '
+            const Minio = require("minio");
+            const client = new Minio.Client({
+              endPoint: "127.0.0.1",
+              port: 9000,
+              useSSL: false,
+              accessKey: "minioadmin",
+              secretKey: "minioadmin"
+            });
+            async function bootstrap() {
+              const bucketName = "mini-vercel-builds";
+              const exists = await client.bucketExists(bucketName);
+              if (!exists) {
+                await client.makeBucket(bucketName, "us-east-1");
+              }
+              const verified = await client.bucketExists(bucketName);
+              if (!verified) {
+                console.error(`Bucket "${bucketName}" verification failed after creation`);
+                process.exit(1);
+              }
+              console.log(`Bucket "${bucketName}" successfully verified and active`);
+            }
+            bootstrap().catch(err => {
+              console.error("MinIO bucket bootstrap failed:", err);
+              process.exit(1);
+            });
+          '
+
+      - name: Run Linting
+        run: pnpm lint
+
+      - name: Run TypeScript Typechecking
+        run: pnpm typecheck
+
+      - name: Run Unit & Integration Tests
+        run: pnpm test
+
+      - name: Build All Monorepo Packages & Apps
+        run: pnpm build
+
+      - name: Generate Software Bill of Materials (SBOM)
+        run: |
+          node -e '
+            const fs = require("fs");
+            const pkg = require("./package.json");
+            const sbom = {
+              bomFormat: "CycloneDX",
+              specVersion: "1.5",
+              version: 1,
+              metadata: {
+                timestamp: new Date().toISOString(),
+                component: {
+                  name: pkg.name,
+                  version: pkg.version,
+                  type: "application"
+                }
+              }
+            };
+            fs.writeFileSync("bom.json", JSON.stringify(sbom, null, 2));
+            console.log("Generated CycloneDX SBOM at bom.json");
+          '
+
+      - name: Upload SBOM Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: software-bill-of-materials
+          path: bom.json
