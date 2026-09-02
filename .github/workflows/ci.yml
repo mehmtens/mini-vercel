@@ -4,10 +4,18 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
     name: Build, Lint, Typecheck & Test
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     services:
       postgres:
@@ -51,33 +59,58 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Gitleaks Secret Scanner
         uses: gitleaks/gitleaks-action@v2
-        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup pnpm (Package Manager)
-        uses: pnpm/action-setup@v4
+      - name: Setup pnpm 11 and Node.js 22
+        uses: pnpm/setup@v1
         with:
           version: 11.22.0
-          run_install: false
-
-      - name: Setup Node.js 20 LTS with pnpm Cache
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
+          runtime: node@22
+          cache: true
+          install: false
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Dependency Security Audit
-        run: pnpm audit --audit-level=high || true
+        run: pnpm audit --prod
+
+      - name: Validate Production Compose and Caddy Configuration
+        env:
+          BASE_DOMAIN: ci.example.com
+          APP_DOMAIN: app.ci.example.com
+          ACME_EMAIL: ci@example.com
+          DOCKER_GID: "999"
+          POSTGRES_USER: pulseops_ci
+          POSTGRES_PASSWORD: ci-database-password-with-32-characters
+          POSTGRES_DB: pulseops_ci
+          REDIS_PASSWORD: ci-redis-password-with-32-characters
+          MINIO_ROOT_USER: pulseops_ci
+          MINIO_ROOT_PASSWORD: ci-minio-password-with-32-characters
+          MINIO_BUCKET_BUILDS: pulseops-ci-builds
+          CRYPTO_MASTER_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+          SESSION_SECRET: ci-session-secret-with-at-least-32-characters
+          GITHUB_CLIENT_ID: ci_github_client_id
+          GITHUB_CLIENT_SECRET: ci-github-client-secret-with-32-characters
+          GITHUB_CALLBACK_URL: https://app.ci.example.com/api/auth/callback/github
+          GITHUB_WEBHOOK_SECRET: ci-webhook-secret-with-at-least-32-characters
+        run: |
+          docker compose -f deploy/docker-compose.production.yml config --quiet
+          docker run --rm \
+            -e APP_DOMAIN -e BASE_DOMAIN -e ACME_EMAIL \
+            -v "$PWD/deploy/caddy/Caddyfile.prod:/etc/caddy/Caddyfile:ro" \
+            caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
+          if node scripts/production-preflight.mjs deploy/production.env.example; then
+            echo "Unsafe production template unexpectedly passed preflight"
+            exit 1
+          fi
 
       - name: Start MinIO Server (Pinned Release)
         run: |
@@ -90,6 +123,8 @@ jobs:
 
       - name: Wait for MinIO Server Readiness (Bounded Retry Probe)
         run: |
+          # JavaScript template literals must remain shell-literal.
+          # shellcheck disable=SC2016
           node -e '
             async function waitForMinio() {
               const maxAttempts = 30;
@@ -112,13 +147,13 @@ jobs:
           '
 
       - name: Generate Prisma Client & Sync Schema
-        run: |
-          pnpm --filter @mini-vercel/database prisma:generate
-          pnpm --filter @mini-vercel/database db:push
+        run: pnpm --filter @mini-vercel/database prisma:generate
 
       - name: Bootstrap MinIO Builds Bucket & Verify Presence
         run: |
-          node -e '
+          # JavaScript template literals must remain shell-literal.
+          # shellcheck disable=SC2016
+          pnpm --filter @mini-vercel/api exec node -e '
             const Minio = require("minio");
             const client = new Minio.Client({
               endPoint: "127.0.0.1",
@@ -158,30 +193,10 @@ jobs:
       - name: Build All Monorepo Packages & Apps
         run: pnpm build
 
-      - name: Generate Software Bill of Materials (SBOM)
-        run: |
-          node -e '
-            const fs = require("fs");
-            const pkg = require("./package.json");
-            const sbom = {
-              bomFormat: "CycloneDX",
-              specVersion: "1.5",
-              version: 1,
-              metadata: {
-                timestamp: new Date().toISOString(),
-                component: {
-                  name: pkg.name,
-                  version: pkg.version,
-                  type: "application"
-                }
-              }
-            };
-            fs.writeFileSync("bom.json", JSON.stringify(sbom, null, 2));
-            console.log("Generated CycloneDX SBOM at bom.json");
-          '
-
-      - name: Upload SBOM Artifact
-        uses: actions/upload-artifact@v4
+      - name: Generate and Upload Complete Software Bill of Materials
+        uses: anchore/sbom-action@v0
         with:
-          name: software-bill-of-materials
-          path: bom.json
+          path: .
+          format: cyclonedx-json
+          artifact-name: pulseops-sbom.cdx.json
+          upload-release-assets: false

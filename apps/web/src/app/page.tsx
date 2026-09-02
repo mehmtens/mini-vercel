@@ -19,6 +19,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { api, ProjectData, DeploymentData } from '../lib/api';
+import { projectUrl } from '../lib/urls';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -237,7 +238,7 @@ export default function DashboardPage() {
               const currentStatus = project.currentDeployment?.status || 'READY';
               const previewUrl =
                 project.currentDeployment?.previewUrl ||
-                `http://${project.slug}.localhost`;
+                projectUrl(project.slug);
 
               return (
                 <Link

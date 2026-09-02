@@ -5,7 +5,7 @@ import * as Minio from 'minio';
 import os from 'os';
 import path from 'path';
 import fs from 'fs';
-import { config } from '@mini-vercel/config';
+import { buildPreviewUrl, config } from '@mini-vercel/config';
 import {
   prisma,
   DeploymentStatus,
@@ -253,6 +253,7 @@ export async function processDeploymentJob(jobData: DeploymentJobPayload): Promi
   const heartbeatKey = `deployment:heartbeat:${deployment_id}`;
   const workspaceDir = path.join(os.tmpdir(), 'mini-vercel-builds', deployment_id);
   let targetProjectId: string = project_name;
+  let targetProjectSlug: string = project_name;
   let targetEnv: 'PRODUCTION' | 'PREVIEW' = 'PREVIEW';
 
   try {
@@ -288,6 +289,7 @@ export async function processDeploymentJob(jobData: DeploymentJobPayload): Promi
 
         if (deploymentRecord?.project) {
           targetProjectId = deploymentRecord.project.id;
+          targetProjectSlug = deploymentRecord.project.slug;
           const isProd = branch === deploymentRecord.project.branch || branch === 'main';
           targetEnv = isProd ? 'PRODUCTION' : 'PREVIEW';
 
@@ -424,7 +426,7 @@ export async function processDeploymentJob(jobData: DeploymentJobPayload): Promi
       return;
     }
 
-    const previewUrl = `https://${project_name}-${commit_hash.slice(0, 7)}.mini-vercel.app`;
+    const previewUrl = buildPreviewUrl(targetProjectSlug, commit_hash);
     await log(`[DEPLOY] Configured edge routing for domain: ${previewUrl}`);
 
     // ----------------------------------------------------

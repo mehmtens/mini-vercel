@@ -16,6 +16,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import { projectHostname } from '../../lib/urls';
 
 interface EnvVarRow {
   key: string;
@@ -218,7 +219,7 @@ export default function NewProjectPage() {
               />
               {slug && (
                 <p className="text-[11px] text-zinc-500 font-mono">
-                  Domain preview: {slug}.localhost
+                  Domain preview: {projectHostname(slug)}
                 </p>
               )}
             </div>

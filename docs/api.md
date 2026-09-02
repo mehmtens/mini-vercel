@@ -1,6 +1,6 @@
-# Mini-Vercel API Reference
+# PulseOps API Reference
 
-Base URL: `http://localhost:8080`
+Yerel base URL: `http://localhost:8081`
 
 ---
 
@@ -14,7 +14,7 @@ Checks operational status and latencies for PostgreSQL, Redis, and the API insta
 - **Response**: `200 OK` (or `503 Service Unavailable` if core storage down)
 
 ```bash
-curl -X GET http://localhost:8080/health
+curl -X GET http://localhost:8081/health
 ```
 
 #### Response Example
@@ -53,7 +53,7 @@ Enqueues a new build & deploy job onto the Redis queue and saves it to PostgreSQ
 - **Headers**: `Content-Type: application/json`
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/deployments \
+curl -X POST http://localhost:8081/api/v1/deployments \
   -H "Content-Type: application/json" \
   -d '{
     "project_name": "ecommerce-storefront",
@@ -85,7 +85,7 @@ Retrieves paginated list of recent deployments.
 - **Path**: `/api/v1/deployments?limit=10&offset=0`
 
 ```bash
-curl -X GET "http://localhost:8080/api/v1/deployments?limit=10"
+curl -X GET "http://localhost:8081/api/v1/deployments?limit=10"
 ```
 
 #### Response Example (`200 OK`)
@@ -99,7 +99,7 @@ curl -X GET "http://localhost:8080/api/v1/deployments?limit=10"
       "branch": "main",
       "commit_hash": "a1b2c3d",
       "status": "READY",
-      "preview_url": "https://ecommerce-storefront-a1b2c3d.mini-vercel.app",
+      "preview_url": "http://ecommerce-storefront-a1b2c3d.localhost",
       "build_duration_ms": 2700,
       "created_at": "2026-08-29T10:31:00Z",
       "started_at": "2026-08-29T10:31:01Z",
@@ -122,7 +122,7 @@ Fetches a single deployment by ID along with its build logs.
 - **Path**: `/api/v1/deployments/{id}`
 
 ```bash
-curl -X GET http://localhost:8080/api/v1/deployments/dpl_3f8b91a2c4e5
+curl -X GET http://localhost:8081/api/v1/deployments/dpl_3f8b91a2c4e5
 ```
 
 ---
@@ -134,5 +134,5 @@ Returns aggregate statistics regarding deployments and Redis queue backlog.
 - **Path**: `/api/v1/stats`
 
 ```bash
-curl -X GET http://localhost:8080/api/v1/stats
+curl -X GET http://localhost:8081/api/v1/stats
 ```

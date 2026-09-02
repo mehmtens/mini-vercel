@@ -25,6 +25,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { api, ProjectData, DeploymentData, EnvVarData } from '../../../lib/api';
+import { projectHostname, projectUrl } from '../../../lib/urls';
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -217,7 +218,7 @@ export default function ProjectDetailPage() {
     );
   }
 
-  const productionUrl = `http://${project.slug}.localhost`;
+  const productionUrl = projectUrl(project.slug);
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -264,7 +265,7 @@ export default function ProjectDetailPage() {
                 rel="noreferrer"
                 className="inline-flex items-center gap-1 text-blue-400 hover:underline font-mono"
               >
-                {project.slug}.localhost
+                {projectHostname(project.slug)}
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>

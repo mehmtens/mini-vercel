@@ -1,6 +1,6 @@
-# 🏛️ Mini-Vercel Sistem Mimarisi
+# 🏛️ PulseOps Sistem Mimarisi
 
-Bu doküman, **Mini-Vercel** bulut dağıtım platformunun sistem mimarisini, bileşenler arası veri akışını, kuyruk yönetimini, depolama stratejisini ve ters vekil sunucu (reverse proxy) yapılandırmasını ayrıntılı olarak açıklamaktadır.
+Bu doküman, **PulseOps** bulut dağıtım platformunun sistem mimarisini, bileşenler arası veri akışını, kuyruk yönetimini, depolama stratejisini ve ters vekil sunucu yapılandırmasını açıklar.
 
 ---
 
@@ -56,7 +56,7 @@ graph TD
   - Zarif kapanma (Graceful shutdown) ile mevcut işlerin güvenle tamamlanmasını sağlar.
 
 ### 2.3. `apps/web` (Next.js Dashboard)
-- **Teknoloji**: Next.js 14 (App Router), React 18, Tailwind CSS, Lucide Icons, TypeScript
+- **Teknoloji**: Next.js 16 (App Router), React 19, Tailwind CSS, Lucide Icons, TypeScript
 - **Görevler**:
   - Servislerin canlı sağlık durumunu (API, Worker, PostgreSQL, Redis, MinIO) gösterir.
   - Gerçek zamanlı metrik kartları (Toplam Dağıtım, Aktif Kuyruk, Başarı Oranı, Ortalama Derleme Süresi).

@@ -1,6 +1,6 @@
 # Backup & Disaster Recovery Runbook
 
-This runbook outlines automated backup policies, retention, integrity verification, dry-run simulation, and disaster recovery procedures for Mini-Vercel PostgreSQL and MinIO storage layers.
+This runbook outlines automated backup policies, retention, integrity verification, dry-run simulation, and disaster recovery procedures for PulseOps PostgreSQL and MinIO storage layers.
 
 ---
 

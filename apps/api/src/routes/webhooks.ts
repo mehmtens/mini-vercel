@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { prisma, DeploymentStatus, DeploymentTrigger, LogStream, transitionDeploymentState } from '@mini-vercel/database';
 import { verifyGitHubWebhookSignature, generateCommitHash } from '@mini-vercel/crypto';
-import { config } from '@mini-vercel/config';
+import { buildPreviewUrl, config } from '@mini-vercel/config';
 import { deploymentQueue, redisConnection } from '../lib/queue';
 import { DeploymentJobPayload } from '@mini-vercel/types';
 import { validateSlug, slugify } from '../lib/slug';
@@ -475,7 +475,7 @@ export async function registerWebhookRoutes(app: FastifyInstance) {
             commitMessage,
             senderUsername,
             branch,
-            previewUrl: `https://${project.slug}-${commitHash.slice(0, 7)}.mini-vercel.app`,
+            previewUrl: buildPreviewUrl(project.slug, commitHash),
           },
         });
 

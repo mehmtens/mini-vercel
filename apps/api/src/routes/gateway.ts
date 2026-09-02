@@ -101,7 +101,7 @@ export async function resolveDeploymentFromRequest(
     }
   }
 
-  // 2. Extract Hostname (e.g. my-app-0123456.mini-vercel.app, my-app.localhost)
+  // 2. Extract Hostname (e.g. my-app-0123456.example.com, my-app.localhost)
   const hostHeader = (req.headers.host || '').split(':')[0].toLowerCase();
   const xForwardedHost = (
     typeof req.headers['x-forwarded-host'] === 'string'
@@ -112,18 +112,19 @@ export async function resolveDeploymentFromRequest(
     .toLowerCase();
 
   const host = xForwardedHost || hostHeader;
-  if (!host || host === 'localhost' || host === '127.0.0.1' || host === 'app.localhost') {
+  const baseDomain = config.app.baseDomain.toLowerCase();
+  const appDomain = config.app.domain.toLowerCase();
+  if (!host || host === 'localhost' || host === '127.0.0.1' || host === appDomain) {
     return null;
   }
 
   // Extract subdomain prefix before root domain
-  // e.g. "my-app-0123456.mini-vercel.app" -> "my-app-0123456"
+  // e.g. "my-app-0123456.example.com" -> "my-app-0123456"
   // e.g. "my-app-0123456.localhost" -> "my-app-0123456"
   let subdomain = '';
-  if (host.endsWith('.mini-vercel.app')) {
-    subdomain = host.replace('.mini-vercel.app', '');
-  } else if (host.endsWith('.localhost')) {
-    subdomain = host.replace('.localhost', '');
+  const configuredSuffix = `.${baseDomain}`;
+  if (host.endsWith(configuredSuffix)) {
+    subdomain = host.slice(0, -configuredSuffix.length);
   } else {
     // Custom domain or single-label subdomain
     const parts = host.split('.');

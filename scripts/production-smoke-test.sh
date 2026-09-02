@@ -6,7 +6,7 @@
 # 1. Compose syntax, environment constraints, and network isolation
 # 2. Production fail-fast security constraints (secrets, dev bypass, Grafana pass)
 # 3. Prometheus scrape configs & alert rules via Promtool entrypoint
-# 4. Service readiness (/health/ready) and Prometheus metrics endpoints
+# 4. Service readiness (/ready) and Prometheus metrics endpoints
 # 5. Zero-downtime atomic pointer rollback (self-contained fixture, <1.0s, audit event, zero queue jobs)
 # 6. Automated backup scripts idempotency and dry-run parity
 # ==============================================================================
@@ -116,7 +116,7 @@ echo "✅ PASSED (7 alert rules valid)"
 # ------------------------------------------------------------------------------
 # STEP 4: Live Service Readiness & Metrics Verification
 # ------------------------------------------------------------------------------
-echo -n "[SMOKE 4/6] Verifying API readiness (/health/ready) and metrics (/metrics)... "
+echo -n "[SMOKE 4/6] Verifying API readiness (/ready) and metrics (/metrics)... "
 DEPS_OUTPUT=$(node scripts/smoke-runner.cjs deps 2>&1)
 if [ $? -eq 0 ]; then
   echo "✅ PASSED (Database, Redis & MinIO dependencies UP)"

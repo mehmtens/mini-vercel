@@ -257,6 +257,7 @@ services:
       dockerfile: apps/web/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: https://${APP_DOMAIN}
+        NEXT_PUBLIC_BASE_DOMAIN: ${BASE_DOMAIN}
     container_name: mini_vercel_web_prod
     restart: always
     init: true
@@ -270,6 +271,7 @@ services:
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: https://${APP_DOMAIN}
+      NEXT_PUBLIC_BASE_DOMAIN: ${BASE_DOMAIN}
     deploy:
       resources:
         limits:

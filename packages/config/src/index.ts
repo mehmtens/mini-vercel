@@ -189,6 +189,21 @@ export const config: AppConfig = {
 };
 
 /**
+ * Builds the canonical immutable preview URL for a deployment.
+ * Local development uses Caddy's `.localhost` HTTP routing; production uses
+ * the configured base domain and HTTPS.
+ */
+export function buildPreviewUrl(
+  projectSlug: string,
+  commitHash: string,
+  baseDomain: string = config.app.baseDomain
+): string {
+  const normalizedDomain = baseDomain.trim().toLowerCase();
+  const protocol = normalizedDomain === 'localhost' ? 'http' : 'https';
+  return `${protocol}://${projectSlug}-${commitHash.slice(0, 7)}.${normalizedDomain}`;
+}
+
+/**
  * Validates that production environments do not use default or insecure secrets (fail-fast).
  */
 export function validateProductionSecrets(): void {

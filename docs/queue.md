@@ -1,6 +1,6 @@
 # 📨 BullMQ Kuyruk ve Worker Mimarisi
 
-Mini-Vercel, yüksek performanslı, asenkron ve güvenilir iş dağıtımı için **Redis** destekli **BullMQ** kuyruk motorunu kullanır.
+PulseOps, yüksek performanslı, asenkron ve güvenilir iş dağıtımı için **Redis** destekli **BullMQ** kuyruk motorunu kullanır.
 
 ---
 
@@ -46,10 +46,10 @@ export interface DeploymentJobPayload {
 
 1. **CLONE**: Belirtilen Git repository'si ve branch klonlanır.
 2. **DEPENDENCIES**: `pnpm` paket yöneticisiyle bağımlılıklar çözülür ve önbelleğe alınır.
-3. **COMPILE**: Next.js 14 üretim paketi (SSG/SSR/Serverless functions) derlenir.
+3. **COMPILE**: Desteklenen statik framework üretim paketi izole Docker sandbox'ında derlenir.
 4. **STATIC_GEN**: Statik HTML ve optimize edilmiş asset'ler üretilir.
 5. **MINIO_UPLOAD**: Üretilen statik dosyalar ve metadata S3 uyumlu MinIO bucket'ına (`mini-vercel-builds/${deployment_id}/`) yüklenir.
-6. **EDGE_DEPLOY**: Canlı önizleme URL'i (`https://${project_name}-${commit_hash}.mini-vercel.app`) yapılandırılır ve edge ağına anons edilir.
+6. **EDGE_DEPLOY**: Canlı önizleme URL'i (`https://${project_slug}-${short_commit}.${BASE_DOMAIN}`) yapılandırılır ve Caddy gateway'e bağlanır.
 7. **SUCCESS**: PostgreSQL kaydı `READY` durumuna güncellenir ve toplam süre kaydedilir.
 
 ---

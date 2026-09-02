@@ -26,6 +26,7 @@ import {
   Keyboard,
 } from 'lucide-react';
 import { api, DeploymentData } from '../../../lib/api';
+import { deploymentPreviewUrl } from '../../../lib/urls';
 
 interface StreamLogItem {
   id?: number | string;
@@ -387,7 +388,10 @@ export default function DeploymentDetailPage() {
     deployment?.preview_url ||
     deployment?.previewUrl ||
     (deployment?.project_slug
-      ? `http://${deployment.project_slug}.localhost`
+      ? deploymentPreviewUrl(
+          deployment.project_slug,
+          deployment.commit_hash || deployment.commitHash
+        )
       : 'http://localhost');
 
   if (loading) {

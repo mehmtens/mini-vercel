@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { prisma, DeploymentStatus, DeploymentTrigger, LogStream, AuditOperation, transitionDeploymentState } from '@mini-vercel/database';
 import { generateCommitHash } from '@mini-vercel/crypto';
-import { config } from '@mini-vercel/config';
+import { buildPreviewUrl, config } from '@mini-vercel/config';
 import { CreateDeploymentDto, DeploymentJobPayload } from '@mini-vercel/types';
 import { minioClient } from '../lib/minio.js';
 import { deploymentQueue } from '../lib/queue';
@@ -99,7 +99,7 @@ export async function registerDeploymentRoutes(app: FastifyInstance) {
             commitMessage: 'Triggered from dashboard / API',
             senderUsername: user.username,
             branch: resolvedBranch,
-            previewUrl: `https://${project.slug}-${resolvedCommit.slice(0, 7)}.mini-vercel.app`,
+            previewUrl: buildPreviewUrl(project.slug, resolvedCommit),
           },
         });
 

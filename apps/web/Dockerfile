@@ -2,6 +2,8 @@ FROM node:22-alpine AS base
 RUN apk add --no-cache openssl libc6-compat
 ARG NEXT_PUBLIC_API_URL=http://localhost:8081
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_BASE_DOMAIN=localhost
+ENV NEXT_PUBLIC_BASE_DOMAIN=$NEXT_PUBLIC_BASE_DOMAIN
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable && corepack prepare pnpm@11.22.0 --activate

@@ -1,136 +1,115 @@
-# 🚀 Mini-Vercel Monorepo
+# PulseOps
 
-Mini-Vercel, modern web uygulamalarını derleyen, paketleyen, nesne deposunda (MinIO S3) saklayan ve dağıtım süreçlerini BullMQ kuyruk mimarisiyle arka planda asenkron olarak yürüten ölçeklenebilir bir mikro platformdur.
+PulseOps, GitHub depolarındaki statik web uygulamalarını izole Docker sandbox'larında derleyen, canlı log yayınlayan, MinIO üzerinde immutable artifact saklayan ve hızlı promote/rollback sağlayan tek sunuculu bir PaaS'tır.
 
----
+İlk MVP; Vite, React, Vue, Astro, düz statik siteler ve Next.js static export akışlarını hedefler. Node.js SSR, Kubernetes, multi-region ve serverless runtime bu sürümün kapsamı dışındadır.
 
-## 🏗️ Teknoloji Yığını & Mimarisi
+## Teknoloji yığını
 
-- **Paket Yöneticisi:** `pnpm` Workspaces
-- **Monorepo Build Sistemi:** `Turborepo`
-- **Backend API:** Fastify 4 + TypeScript (`apps/api`)
-- **Arka Plan İşleyici:** BullMQ + Redis + MinIO S3 (`apps/worker`)
-- **Web Arayüzü:** Next.js 14 (App Router) + Tailwind CSS (`apps/web`)
-- **Veritabanı & Önbellek:** PostgreSQL 16 + Redis 7
-- **Nesne Depolama:** MinIO S3
-- **Ters Proxy:** Caddy 2 (`deploy/caddy/Caddyfile`)
-- **Birim & Entegrasyon Testleri:** Vitest
+- Monorepo: pnpm 11 workspaces + Turborepo
+- Dashboard: Next.js 16, React 19, TypeScript, Tailwind CSS
+- API: Node.js 22, Fastify 5, Prisma
+- Worker: Node.js 22, BullMQ, Nixpacks planlama, Docker Engine API
+- Veri: PostgreSQL 16, Redis 7, MinIO
+- Edge ve TLS: Caddy 2
+- Test: Vitest, Playwright ve gerçek Docker build pipeline testleri
 
----
+## Sistem akışı
 
-## 📂 Dizin Yapısı
-
-```
-mini-vercel/
-├── apps/
-│   ├── api/                 # Fastify REST API (/health, /api/v1/deployments, BullMQ Producer)
-│   ├── web/                 # Next.js 14 Durum ve Dağıtım Paneli
-│   └── worker/              # BullMQ Background Worker (Derleme Aşamaları, MinIO Yükleme)
-├── packages/
-│   ├── database/            # PostgreSQL bağlantı havuzu ve DAL
-│   ├── crypto/              # SHA-256 hash, ID üretimi, HMAC imzalama
-│   ├── types/               # Ortak TypeScript DTO ve arayüz tanımları
-│   └── config/              # Ortak .env yapılandırma yöneticisi
-├── deploy/
-│   ├── docker-compose.yml   # PostgreSQL, Redis, MinIO ve Caddy İskeleti
-│   └── caddy/               # Caddyfile yapılandırması
-├── migrations/              # PostgreSQL şema dosyaları (000001_init_schema.up.sql)
-├── docs/                    # Detaylı Mimari ve API dokümanları
-│   ├── architecture.md
-│   ├── api.md
-│   └── queue.md
-├── .eslintrc.json           # Paylaşılan ESLint yapılandırması
-├── .prettierrc              # Paylaşılan Prettier biçimlendirme kuralları
-├── turbo.json               # Turborepo işlem boru hattı
-├── pnpm-workspace.yaml      # pnpm çalışma alanı tanımı
-├── .env.example             # Çevre değişkenleri şablonu
-└── README.md                # Proje dokümantasyonu
+```text
+GitHub / Dashboard
+        │
+        ▼
+Fastify API ──► PostgreSQL
+        │
+        ▼
+Redis / BullMQ ──► Worker ──► izole Docker build
+                                  │
+                                  ▼
+                              MinIO artifact
+                                  │
+                                  ▼
+                         Caddy preview domain
 ```
 
----
+Worker yaşam döngüsü:
 
-## 🛠️ Kurulum & Geliştirme
+```text
+QUEUED → INITIALIZING → CLONING → BUILDING → UPLOADING → DEPLOYING → READY
+```
 
-### 1. Bağımlılıkları Yükleme
+Başarısız veya kullanıcı tarafından durdurulan işler `FAILED` / `CANCELLED` terminal durumlarına geçer. Promote ve rollback işlemleri yeni build oluşturmadan atomik deployment pointer değişimi yapar.
+
+## Repository yapısı
+
+```text
+apps/api       Fastify API, GitHub OAuth/webhook, SSE, artifact gateway
+apps/web       PulseOps yönetim paneli
+apps/worker    BullMQ worker, Docker sandbox, artifact yükleme
+packages       config, crypto, database ve ortak tip paketleri
+deploy         local/production Compose, Caddy ve observability tanımları
+scripts        preflight, smoke test, backup ve restore araçları
+docs           mimari, API ve operasyon runbook'ları
+```
+
+## Yerel çalıştırma
+
+Gereksinimler: Docker Desktop, Node.js `22.13+ <23` ve pnpm `11.22.0`.
+
 ```bash
-pnpm install
-```
-
-### 2. Altyapı Servislerini Başlatma (Docker Compose)
-PostgreSQL, Redis, MinIO ve Caddy servislerini başlatmak için:
-```bash
-# Servisleri arka planda başlatır
+git clone https://github.com/mehmtens/mini-vercel.git
+cd mini-vercel
+cp .env.example .env
+pnpm install --frozen-lockfile
 pnpm docker:up
-
-# Servis durumunu doğrulamak için
-pnpm docker:config
-
-# Servisleri durdurmak için
-pnpm docker:down
 ```
 
-### 3. Kod Kalitesi & Test Komutları
+Servisler hazır olduğunda:
+
+- Dashboard: `http://localhost:3000`
+- API: `http://localhost:8081`
+- API readiness: `http://localhost:8081/ready`
+- MinIO console: `http://localhost:9001`
+- Caddy dashboard: `http://app.localhost`
+
+Yerel geliştirmede `.env.example` içindeki `DEV_AUTH_BYPASS=true` demo kullanıcı oluşturur. Production'da bu değer kesinlikle `false` olmalıdır.
+
+## Doğrulama
+
 ```bash
-# Tip kontrolü (Tüm paketler için)
-pnpm typecheck
-
-# Lint kontrolü
 pnpm lint
-
-# Otomatik biçimlendirme (Prettier)
-pnpm format
-
-# Birim ve entegrasyon testleri (Vitest)
+pnpm typecheck
 pnpm test
-
-# Tüm uygulamaları ve paketleri derleme
 pnpm build
-
-# Canlı geliştirme modunda çalıştırma
-pnpm dev
+pnpm audit --prod
+docker compose -f deploy/docker-compose.yml config
 ```
 
----
+`pnpm test`, `mini_vercel_test` adında izole bir veritabanı oluşturur, migration'ları uygular ve test sonunda veritabanını kaldırır. Normal `mini_vercel` veritabanına test verisi yazmaz.
 
-## 📡 API Uç Noktaları
+## Temel API yolları
 
-| Metod | Uç Nokta | Açıklama |
-| :--- | :--- | :--- |
-| `GET` | `/health` | API, Veritabanı, Redis ve MinIO sağlık/gecikme durumu |
-| `GET` | `/api/v1/health` | Detaylı JSON servis sağlık yanıtı |
-| `GET` | `/api/v1/deployments` | Son dağıtımları listeler |
-| `POST` | `/api/v1/deployments` | Yeni dağıtım işi oluşturur ve BullMQ kuyruğuna ekler |
-| `GET` | `/api/v1/deployments/:id` | Dağıtım detayını ve canlı logları getirir |
-| `GET` | `/api/v1/stats` | Toplam proje, dağıtım ve başarı oranları |
+- `GET /health`: process liveness
+- `GET /ready`: PostgreSQL, Redis ve MinIO readiness
+- `GET|POST /api/projects`: proje yönetimi
+- `GET|POST /api/deployments`: deployment yönetimi
+- `GET /api/deployments/:id/logs/stream`: canlı SSE log akışı
+- `POST /api/deployments/:id/promote`: production'a promote
+- `POST /api/deployments/:id/rollback`: önceki artifact'a rollback
+- `GET /metrics`: Prometheus metrikleri
 
----
+Tam sözleşme için [`docs/api.md`](docs/api.md) dosyasına bakın.
 
-## ⚙️ Çevre Değişkenleri (.env.example)
+## Production kurulumu
 
-```env
-NODE_ENV=development
-API_PORT=8080
-API_HOST=0.0.0.0
+Production kurulumu gerçek domain, GitHub OAuth/Webhook bilgileri ve güçlü secret'lar gerektirir.
 
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=mini_vercel
-POSTGRES_PORT=5432
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/mini_vercel
-
-REDIS_PORT=6379
-REDIS_URL=redis://localhost:6379
-
-MINIO_ENDPOINT=localhost
-MINIO_PORT=9000
-MINIO_CONSOLE_PORT=9001
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=minioadmin
-MINIO_USE_SSL=false
-MINIO_BUCKET_BUILDS=mini-vercel-builds
-
-QUEUE_NAME=deployment-queue
-QUEUE_CONCURRENCY=5
-
-NEXT_PUBLIC_API_URL=http://localhost:8080
+```bash
+cp deploy/production.env.example .env
+# .env içindeki tüm placeholder değerleri değiştirin
+node scripts/production-preflight.mjs .env
+docker compose --env-file .env -f deploy/docker-compose.production.yml config
+docker compose --env-file .env -f deploy/docker-compose.production.yml up -d --build
 ```
+
+Ayrıntılı sunucu, DNS, TLS, backup ve rollback adımları için [`docs/runbooks/production-deployment-and-rollback.md`](docs/runbooks/production-deployment-and-rollback.md) dosyasını kullanın. Gerçek `.env`, token, private key ve backup dosyaları Git'e eklenmemelidir.
