@@ -18,6 +18,7 @@ RUN pnpm --filter @mini-vercel/api build
 
 # Security: Run application as unprivileged non-root user
 USER node
+WORKDIR /app/apps/api
 
 EXPOSE 8080
-CMD ["pnpm", "--filter", "@mini-vercel/api", "start"]
+CMD ["node", "dist/index.js"]

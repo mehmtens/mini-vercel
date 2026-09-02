@@ -40,7 +40,7 @@ export function Navbar() {
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-base tracking-tight text-white flex items-center gap-1.5">
-                Mini Vercel
+                PulseOps
                 <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
                   MVP
                 </span>

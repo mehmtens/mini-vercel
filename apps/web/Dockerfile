@@ -1,5 +1,7 @@
 FROM node:22-alpine AS base
 RUN apk add --no-cache openssl libc6-compat
+ARG NEXT_PUBLIC_API_URL=http://localhost:8081
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable && corepack prepare pnpm@11.22.0 --activate
@@ -17,6 +19,7 @@ RUN pnpm --filter @mini-vercel/web build
 
 # Security: Run application as unprivileged non-root user
 USER node
+WORKDIR /app/apps/web
 
 EXPOSE 3000
-CMD ["pnpm", "--filter", "@mini-vercel/web", "start"]
+CMD ["node", "node_modules/next/dist/bin/next", "start", "-p", "3000"]

@@ -71,6 +71,7 @@ export default function DeploymentDetailPage() {
   const lastSequenceRef = useRef<number>(0);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isTerminalRef = useRef<boolean>(false);
+  const reconnectRef = useRef<() => void>(() => undefined);
 
   const copyAllLogs = useCallback(() => {
     const text = logs.map((log) => log.message).join('\n');
@@ -223,14 +224,20 @@ export default function DeploymentDetailPage() {
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = setTimeout(() => {
         if (!isTerminalRef.current) {
-          connectSSE();
+          reconnectRef.current();
         }
       }, 2500);
     };
   }, [deploymentId, loadDeployment]);
 
+  useEffect(() => {
+    reconnectRef.current = connectSSE;
+  }, [connectSSE]);
+
   // Initial load
   useEffect(() => {
+    // Loading deployment state is the external synchronization performed by this effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadDeployment().then(() => {
       if (!isTerminalRef.current) {
         connectSSE();

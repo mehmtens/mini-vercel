@@ -1,5 +1,5 @@
 import './telemetry-init.js';
-import fastify, { FastifyInstance } from 'fastify';
+import fastify, { FastifyError, FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
@@ -204,7 +204,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
 
   // 7. Centralized Safe Error Handler
-  app.setErrorHandler((error, req, reply) => {
+  app.setErrorHandler((error: FastifyError, req, reply) => {
     const statusCode = error.statusCode || (error as any).status || 500;
     const errorName = error.name || 'InternalServerError';
 

@@ -1,7 +1,11 @@
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import { Resource } from '@opentelemetry/resources';
-import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
+import { resourceFromAttributes } from '@opentelemetry/resources';
+import {
+  ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
+  ATTR_SERVICE_NAME,
+  ATTR_SERVICE_VERSION,
+} from '@opentelemetry/semantic-conventions';
 import { config } from '@mini-vercel/config';
 
 let workerSdk: NodeSDK | null = null;
@@ -12,10 +16,10 @@ export function initWorkerTelemetry(): NodeSDK | null {
   if (config.telemetry.enabled || process.env.NODE_ENV === 'production') {
     try {
       workerSdk = new NodeSDK({
-        resource: new Resource({
-          [SemanticResourceAttributes.SERVICE_NAME]: 'mini-vercel-worker',
-          [SemanticResourceAttributes.SERVICE_VERSION]: '1.0.0',
-          [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: config.env,
+        resource: resourceFromAttributes({
+          [ATTR_SERVICE_NAME]: 'pulseops-worker',
+          [ATTR_SERVICE_VERSION]: '1.0.0',
+          [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: config.env,
         }),
         instrumentations: [
           getNodeAutoInstrumentations({

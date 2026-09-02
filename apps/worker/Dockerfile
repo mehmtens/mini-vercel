@@ -18,5 +18,6 @@ RUN pnpm --filter @mini-vercel/worker build
 
 # Security: Run application as unprivileged non-root user
 USER node
+WORKDIR /app/apps/worker
 
-CMD ["pnpm", "--filter", "@mini-vercel/worker", "start"]
+CMD ["node", "dist/index.js"]

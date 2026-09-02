@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Mini-Vercel Strict Production Smoke Test & Verification Suite
+# PulseOps Strict Production Smoke Test & Verification Suite
 # ==============================================================================
 # Strict validation of:
 # 1. Compose syntax, environment constraints, and network isolation
@@ -18,7 +18,7 @@ TEST_ENV_FILE="deploy/production.env.example"
 API_URL="${API_URL:-http://localhost:8080}"
 
 echo "=============================================================================="
-echo " 🚀 Mini-Vercel Strict Production Verification & Smoke Test Suite"
+echo " 🚀 PulseOps Strict Production Verification & Smoke Test Suite"
 echo "=============================================================================="
 
 # ------------------------------------------------------------------------------
@@ -30,6 +30,14 @@ if docker compose --env-file "${TEST_ENV_FILE}" -f "${COMPOSE_FILE}" config > /d
 else
   echo "❌ FAILED"
   exit 1
+fi
+
+echo -n "[SMOKE 1a/6] Verifying template credentials are rejected by production preflight... "
+if node scripts/production-preflight.mjs "${TEST_ENV_FILE}" >/dev/null 2>&1; then
+  echo "❌ FAILED (unsafe template unexpectedly passed)"
+  exit 1
+else
+  echo "✅ PASSED"
 fi
 
 echo -n "[SMOKE 1b/6] Verifying MinIO & Worker port isolation from public host... "

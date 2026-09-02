@@ -14,8 +14,9 @@ describe('OpenTelemetry Distributed Tracing & InMemorySpanExporter Verification'
 
   beforeEach(() => {
     memoryExporter = new InMemorySpanExporter();
-    tracerProvider = new BasicTracerProvider();
-    tracerProvider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
+    tracerProvider = new BasicTracerProvider({
+      spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+    });
     trace.setGlobalTracerProvider(tracerProvider);
     propagation.setGlobalPropagator(new W3CTraceContextPropagator());
   });
@@ -70,7 +71,7 @@ describe('OpenTelemetry Distributed Tracing & InMemorySpanExporter Verification'
     expect(exportedApiSpan?.spanContext().traceId).toBe(expectedTraceId);
 
     // b) Worker span's parentSpanId points directly to API span's spanId
-    expect(exportedWorkerSpan?.parentSpanId).toBe(expectedParentSpanId);
+    expect(exportedWorkerSpan?.parentSpanContext?.spanId).toBe(expectedParentSpanId);
 
     // c) Worker attributes are recorded accurately
     expect(exportedWorkerSpan?.attributes['build.framework']).toBe('vite');

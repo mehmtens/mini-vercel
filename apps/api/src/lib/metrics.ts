@@ -125,7 +125,7 @@ export const metricsPlugin: FastifyPluginAsync = async (app: FastifyInstance) =>
     if (startTime) {
       const diff = process.hrtime(startTime);
       const durationSeconds = diff[0] + diff[1] / 1e9;
-      const route = req.routeOptions?.url || req.routerPath || req.url.split('?')[0] || 'unknown';
+      const route = req.routeOptions?.url || req.url.split('?')[0] || 'unknown';
       const statusCode = reply.statusCode.toString();
 
       httpRequestCounter.inc({ method: req.method, route, status_code: statusCode });

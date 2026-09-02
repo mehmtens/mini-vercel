@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   FolderGit2,
   ExternalLink,
@@ -20,6 +21,7 @@ import {
 import { api, ProjectData, DeploymentData } from '../lib/api';
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [projects, setProjects] = useState<ProjectData[]>([]);
   const [deployments, setDeployments] = useState<DeploymentData[]>([]);
   const [stats, setStats] = useState<any>(null);
@@ -28,13 +30,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [deployingId, setDeployingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadData();
-    const interval = setInterval(loadData, 10000);
-    return () => clearInterval(interval);
-  }, []);
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     try {
       const [projData, depData, statsData] = await Promise.all([
         api.getProjects(),
@@ -49,7 +45,15 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    // Fetching dashboard data is the external synchronization performed by this effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadData();
+    const interval = setInterval(() => void loadData(), 10000);
+    return () => clearInterval(interval);
+  }, [loadData]);
 
   async function handleQuickDeploy(project: ProjectData, e: React.MouseEvent) {
     e.preventDefault();
@@ -61,7 +65,7 @@ export default function DashboardPage() {
         repo_url: project.repoUrl,
         branch: project.branch,
       });
-      window.location.href = `/deployments/${deployment.id}`;
+      router.push(`/deployments/${deployment.id}`);
     } catch (err: any) {
       alert(`Deployment failed: ${err.message}`);
       setDeployingId(null);

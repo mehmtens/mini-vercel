@@ -1,3 +1,5 @@
+# DEPRECATED: Do not use this legacy file for new deployments.
+# Use deploy/docker-compose.production.yml and the production runbook instead.
 services:
   postgres:
     image: postgres:16-alpine

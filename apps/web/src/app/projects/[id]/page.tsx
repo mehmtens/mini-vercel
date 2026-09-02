@@ -64,7 +64,9 @@ export default function ProjectDetailPage() {
   }, [projectId]);
 
   useEffect(() => {
-    loadProjectData();
+    // Loading project data is the external synchronization performed by this effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadProjectData();
   }, [loadProjectData]);
 
   async function handleDeployNew() {

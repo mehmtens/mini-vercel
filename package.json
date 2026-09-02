@@ -2,7 +2,7 @@
   "name": "mini-vercel-monorepo",
   "version": "1.0.0",
   "private": true,
-  "description": "Mini-Vercel Monorepo: Fastify API, Next.js Web, BullMQ Worker, PostgreSQL, Redis, MinIO, Caddy",
+  "description": "PulseOps deployment platform: Fastify API, Next.js Web, BullMQ Worker, PostgreSQL, Redis, MinIO, Caddy",
   "packageManager": "pnpm@11.22.0",
   "engines": {
     "node": ">=22.13.0 <23",
@@ -22,7 +22,8 @@
     "docker:up": "docker compose -f deploy/docker-compose.yml up -d",
     "docker:down": "docker compose -f deploy/docker-compose.yml down",
     "docker:logs": "docker compose -f deploy/docker-compose.yml logs -f",
-    "docker:config": "docker compose -f deploy/docker-compose.yml config"
+    "docker:config": "docker compose -f deploy/docker-compose.yml config",
+    "production:preflight": "node scripts/production-preflight.mjs"
   },
   "devDependencies": {
     "@types/node": "^20.17.0",

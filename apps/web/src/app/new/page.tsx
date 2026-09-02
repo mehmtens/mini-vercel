@@ -73,7 +73,7 @@ export default function NewProjectPage() {
 
   // Form State
   const [name, setName] = useState('');
-  const [repoUrl, setRepoUrl] = useState('https://github.com/mini-vercel/sample-app');
+  const [repoUrl, setRepoUrl] = useState('');
   const [branch, setBranch] = useState('main');
   const [rootDirectory, setRootDirectory] = useState('/');
   const [framework, setFramework] = useState('nextjs');
