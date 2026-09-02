@@ -40,7 +40,11 @@ async function main() {
 
   const pnpmCli = process.env.npm_execpath;
   if (!pnpmCli) throw new Error('pnpm executable path is unavailable.');
-  execFileSync(process.execPath, [pnpmCli, 'exec', 'prisma', 'migrate', 'deploy'], {
+  const pnpmArguments = ['exec', 'prisma', 'migrate', 'deploy'];
+  const pnpmIsScript = /\.[cm]?js$/i.test(pnpmCli);
+  const executable = pnpmIsScript ? process.execPath : pnpmCli;
+  const executableArguments = pnpmIsScript ? [pnpmCli, ...pnpmArguments] : pnpmArguments;
+  execFileSync(executable, executableArguments, {
     cwd: packageRoot,
     env: { ...process.env, DATABASE_URL: testUrl.toString(), NODE_ENV: 'test' },
     stdio: 'inherit',
