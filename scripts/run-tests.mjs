@@ -15,7 +15,11 @@ databaseUrl.pathname = '/mini_vercel_test';
 
 const pnpmCli = process.env.npm_execpath;
 if (!pnpmCli) throw new Error('pnpm executable path is unavailable.');
-const result = spawnSync(process.execPath, [pnpmCli, 'exec', 'turbo', 'run', 'test'], {
+const pnpmArguments = ['exec', 'turbo', 'run', 'test'];
+const pnpmIsScript = /\.[cm]?js$/i.test(pnpmCli);
+const executable = pnpmIsScript ? process.execPath : pnpmCli;
+const executableArguments = pnpmIsScript ? [pnpmCli, ...pnpmArguments] : pnpmArguments;
+const result = spawnSync(executable, executableArguments, {
   cwd: process.cwd(),
   env: {
     ...process.env,
