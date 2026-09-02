@@ -95,13 +95,14 @@ jobs:
           MINIO_ROOT_USER: pulseops_ci
           MINIO_ROOT_PASSWORD: ci-minio-password-with-32-characters
           MINIO_BUCKET_BUILDS: pulseops-ci-builds
-          CRYPTO_MASTER_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
           SESSION_SECRET: ci-session-secret-with-at-least-32-characters
           GITHUB_CLIENT_ID: ci_github_client_id
           GITHUB_CLIENT_SECRET: ci-github-client-secret-with-32-characters
           GITHUB_CALLBACK_URL: https://app.ci.example.com/api/auth/callback/github
           GITHUB_WEBHOOK_SECRET: ci-webhook-secret-with-at-least-32-characters
         run: |
+          CRYPTO_MASTER_KEY="$(printf '01%.0s' {1..32})"
+          export CRYPTO_MASTER_KEY
           docker compose -f deploy/docker-compose.production.yml config --quiet
           docker run --rm \
             -e APP_DOMAIN -e BASE_DOMAIN -e ACME_EMAIL \
