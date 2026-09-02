@@ -42,4 +42,4 @@ blob-report
 *.tsbuildinfo
 *.sql.gz
 *.tar.gz
-
+backups/

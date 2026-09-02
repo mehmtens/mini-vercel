@@ -228,7 +228,7 @@ export const api = {
   // System
   async getHealth(): Promise<any> {
     try {
-      return await fetchJson('/health');
+      return await fetchJson('/ready');
     } catch {
       return { status: 'offline' };
     }

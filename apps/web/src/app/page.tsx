@@ -134,7 +134,7 @@ export default function DashboardPage() {
           <div>
             <p className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Total Deployments</p>
             <h3 className="text-2xl font-bold text-white mt-1">
-              {stats?.total_deployments || deployments.length}
+              {stats?.total_deployments ?? deployments.length}
             </h3>
           </div>
           <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20">
@@ -146,7 +146,7 @@ export default function DashboardPage() {
           <div>
             <p className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Active Queue Jobs</p>
             <h3 className="text-2xl font-bold text-white mt-1">
-              {stats?.active_queue_jobs || 0}
+              {stats?.active_queue_jobs ?? 0}
             </h3>
           </div>
           <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20">
@@ -158,7 +158,7 @@ export default function DashboardPage() {
           <div>
             <p className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Avg Build Duration</p>
             <h3 className="text-2xl font-bold text-white mt-1">
-              {stats?.avg_build_time_ms ? `${(stats.avg_build_time_ms / 1000).toFixed(1)}s` : '1.4s'}
+              {stats?.avg_build_time_ms ? `${(stats.avg_build_time_ms / 1000).toFixed(1)}s` : '—'}
             </h3>
           </div>
           <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">

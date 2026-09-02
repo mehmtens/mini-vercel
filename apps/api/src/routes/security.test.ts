@@ -78,6 +78,7 @@ describe('Application & Edge Security Baseline Integration Tests', () => {
       const res = await app.inject({
         method: 'GET',
         url: '/api/stats',
+        headers: { 'x-user-id': testUser.id },
       });
 
       expect(res.statusCode).toBe(200);

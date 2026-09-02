@@ -14,7 +14,7 @@ export function Navbar() {
     async function check() {
       try {
         const res = await api.getHealth();
-        setHealthStatus(res.status === 'healthy' ? 'healthy' : res.status === 'degraded' ? 'degraded' : 'unhealthy');
+        setHealthStatus(res.status === 'ok' ? 'healthy' : res.status === 'degraded' ? 'degraded' : 'unhealthy');
       } catch {
         setHealthStatus('unhealthy');
       }

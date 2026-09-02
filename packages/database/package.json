@@ -31,6 +31,8 @@
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:prepare": "tsx prisma/prepare-test-db.ts",
+    "test:cleanup": "tsx prisma/prepare-test-db.ts --drop-only",
     "test:db": "vitest run src/index.test.ts",
     "clean": "rimraf dist"
   },

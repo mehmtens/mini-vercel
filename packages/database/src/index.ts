@@ -52,17 +52,27 @@ export class Database {
     }
   }
 
-  public async getStats() {
+  public async getStats(userId?: string) {
     try {
-      const totalDeployments = await prisma.deployment.count();
-      const readyDeployments = await prisma.deployment.count({ where: { status: 'READY' } });
+      const tenantFilter = userId ? { project: { userId } } : {};
+      const totalDeployments = await prisma.deployment.count({ where: tenantFilter });
+      const readyDeployments = await prisma.deployment.count({
+        where: { ...tenantFilter, status: 'READY' },
+      });
+      const activeDeployments = await prisma.deployment.count({
+        where: {
+          ...tenantFilter,
+          status: { in: ['QUEUED', 'INITIALIZING', 'CLONING', 'BUILDING', 'UPLOADING', 'DEPLOYING'] },
+        },
+      });
       const avgDuration = await prisma.deployment.aggregate({
         _avg: { buildDurationMs: true },
-        where: { status: 'READY' },
+        where: { ...tenantFilter, status: 'READY' },
       });
 
       const grouped = await prisma.deployment.groupBy({
         by: ['status'],
+        where: tenantFilter,
         _count: { status: true },
       });
 
@@ -73,7 +83,7 @@ export class Database {
 
       return {
         total_deployments: totalDeployments,
-        active_queue_jobs: 0,
+        active_queue_jobs: activeDeployments,
         status_counts,
         avg_build_time_ms: Math.round(avgDuration._avg.buildDurationMs || 0),
         success_rate: totalDeployments > 0 ? (readyDeployments / totalDeployments) * 100 : 100,
