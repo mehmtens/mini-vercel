@@ -113,7 +113,7 @@ export class BuildPlanner {
       installCommand,
       buildCommand,
       outputDirectory,
-      nodeVersion: '20',
+      nodeVersion: '22',
       env: {
         CI: 'true',
         NODE_ENV: 'production',

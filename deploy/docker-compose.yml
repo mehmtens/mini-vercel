@@ -1,3 +1,5 @@
+name: mini-vercel
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -26,7 +28,7 @@ services:
     restart: unless-stopped
     command: redis-server --appendonly yes
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${REDIS_PORT:-6380}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -80,7 +82,7 @@ services:
     container_name: mini_vercel_api
     restart: unless-stopped
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       API_PORT: 8080
       API_HOST: 0.0.0.0
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-mini_vercel}
@@ -95,7 +97,7 @@ services:
       GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET:-dev_webhook_secret_key_12345}
       CRYPTO_MASTER_KEY: ${CRYPTO_MASTER_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
     ports:
-      - "${API_PORT:-8080}:8080"
+      - "${API_PORT:-8081}:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -111,7 +113,7 @@ services:
     container_name: mini_vercel_worker
     restart: unless-stopped
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-mini_vercel}
       REDIS_URL: redis://redis:6379
       MINIO_ENDPOINT: minio
@@ -125,6 +127,8 @@ services:
       CRYPTO_MASTER_KEY: ${CRYPTO_MASTER_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    group_add:
+      - "0"
     depends_on:
       postgres:
         condition: service_healthy
@@ -143,7 +147,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: http://localhost:8080
+      NEXT_PUBLIC_API_URL: http://localhost:8081
     ports:
       - "${WEB_PORT:-3000}:3000"
     depends_on:

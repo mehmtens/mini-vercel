@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
 
 async function fetchJson<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`;
@@ -17,7 +17,7 @@ async function fetchJson<T>(endpoint: string, options: RequestInit = {}): Promis
     try {
       const errJson = await res.json();
       errorMsg = errJson.message || errJson.error || errorMsg;
-    } catch (_err) {
+    } catch {
       // Ignore JSON parse failure for error responses
     }
     throw new Error(errorMsg);

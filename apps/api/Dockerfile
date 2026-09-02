@@ -1,7 +1,8 @@
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
+RUN apk add --no-cache openssl libc6-compat
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@11.22.0 --activate
 
 WORKDIR /app
 
@@ -11,9 +12,9 @@ COPY --chown=node:node packages/ ./packages/
 COPY --chown=node:node apps/api/ ./apps/api/
 
 RUN pnpm install --filter @mini-vercel/api...
+RUN pnpm --filter @mini-vercel/database generate
+RUN pnpm --filter "@mini-vercel/api^..." build
 RUN pnpm --filter @mini-vercel/api build
-
-RUN chown -R node:node /app
 
 # Security: Run application as unprivileged non-root user
 USER node

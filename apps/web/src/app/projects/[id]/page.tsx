@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
@@ -46,11 +46,7 @@ export default function ProjectDetailPage() {
   const [newTarget, setNewTarget] = useState<'PRODUCTION' | 'PREVIEW' | 'ALL'>('ALL');
   const [addingEnv, setAddingEnv] = useState(false);
 
-  useEffect(() => {
-    loadProjectData();
-  }, [projectId]);
-
-  async function loadProjectData() {
+  const loadProjectData = useCallback(async () => {
     try {
       const [proj, deps, envs] = await Promise.all([
         api.getProject(projectId),
@@ -65,7 +61,11 @@ export default function ProjectDetailPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [projectId]);
+
+  useEffect(() => {
+    loadProjectData();
+  }, [loadProjectData]);
 
   async function handleDeployNew() {
     if (!project) return;
@@ -117,7 +117,7 @@ export default function ProjectDetailPage() {
     try {
       const envs = await api.getProjectEnv(projectId, nextState);
       setEnvVars(envs);
-    } catch (_err) {
+    } catch {
       // Ignore reveal error
     }
   }

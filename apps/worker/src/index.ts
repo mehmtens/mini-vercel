@@ -293,7 +293,7 @@ export async function processDeploymentJob(jobData: DeploymentJobPayload): Promi
 
           if (deploymentRecord.project.envVars) {
             const filteredVars = deploymentRecord.project.envVars.filter(
-              (e) => e.target === targetEnv || e.target === 'ALL'
+              (e: any) => e.target === targetEnv || e.target === 'ALL'
             );
 
             for (const env of filteredVars) {

@@ -72,6 +72,13 @@ export default function DeploymentDetailPage() {
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isTerminalRef = useRef<boolean>(false);
 
+  const copyAllLogs = useCallback(() => {
+    const text = logs.map((log) => log.message).join('\n');
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [logs]);
+
   const loadDeployment = useCallback(async () => {
     if (!deploymentId) return;
     try {
@@ -128,7 +135,7 @@ export default function DeploymentDetailPage() {
       eventSourceRef.current = null;
     }
 
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
     const lastSeq = lastSequenceRef.current;
     const url = `${apiBase}/api/deployments/${deploymentId}/logs/stream${lastSeq > 0 ? `?lastEventId=${lastSeq}` : ''}`;
 
@@ -182,7 +189,7 @@ export default function DeploymentDetailPage() {
             isTerminalRef.current = true;
           }
         }
-      } catch (_err) {
+      } catch {
         // Ignore status event parsing error
       }
     });
@@ -277,7 +284,7 @@ export default function DeploymentDetailPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [logs]);
+  }, [copyAllLogs]);
 
   async function handleCancel() {
     if (!confirm('Are you sure you want to cancel this active build?')) return;
@@ -320,13 +327,6 @@ export default function DeploymentDetailPage() {
       setRollingBack(false);
     }
   }
-
-  const copyAllLogs = () => {
-    const text = logs.map((l) => l.message).join('\n');
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   const getStageIndex = (status?: string) => {
     if (!status) return 0;

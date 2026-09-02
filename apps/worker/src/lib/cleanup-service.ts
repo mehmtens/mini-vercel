@@ -7,6 +7,8 @@ import { prisma } from '@mini-vercel/database';
 import { config } from '@mini-vercel/config';
 import { workerCleanupErrorsCounter } from './metrics';
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export interface CleanupResult {
   previewDeploymentsCleaned: number;
   orphanContainersCleaned: number;
@@ -156,7 +158,9 @@ export class CleanupService {
           const parts = obj.name.split('/');
           if (parts.length >= 3 && parts[0] === 'artifacts') {
             const depId = parts[2];
-            deploymentPrefixes.add(depId);
+            if (UUID_PATTERN.test(depId)) {
+              deploymentPrefixes.add(depId);
+            }
           }
         }
       }

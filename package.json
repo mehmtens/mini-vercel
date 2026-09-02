@@ -5,8 +5,8 @@
   "description": "Mini-Vercel Monorepo: Fastify API, Next.js Web, BullMQ Worker, PostgreSQL, Redis, MinIO, Caddy",
   "packageManager": "pnpm@11.22.0",
   "engines": {
-    "node": "^20.0.0 || ^22.0.0",
-    "pnpm": ">=9.0.0"
+    "node": ">=22.13.0 <23",
+    "pnpm": "11.22.0"
   },
   "scripts": {
     "build": "turbo run build",

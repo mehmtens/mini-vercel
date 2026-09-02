@@ -134,7 +134,7 @@ export class DockerRunner {
       outputDirectory: options.outputDirectory,
     });
 
-    onLog(`[NIXPACKS] Plan generated for project "${projectName}": Provider: "node (v20)", Framework: "${plan.framework}", Package Manager: "${plan.packageManager}"`, 'STDOUT');
+    onLog(`[NIXPACKS] Plan generated for project "${projectName}": Provider: "node (v${plan.nodeVersion})", Framework: "${plan.framework}", Package Manager: "${plan.packageManager}"`, 'STDOUT');
     onLog(`[NIXPACKS] Install command: "${plan.installCommand}", Build command: "${plan.buildCommand}", Output: "${plan.outputDirectory}"`, 'STDOUT');
     onLog(`[SANDBOX] Initializing isolated Docker sandbox (UID: 1000, CapDrop: ALL, NoHostBinds: true, Timeout: ${timeoutMs / 1000}s)...`, 'STDOUT');
 
@@ -164,7 +164,7 @@ export class DockerRunner {
       }
     }
 
-    const image = 'node:20-alpine';
+    const image = `node:${plan.nodeVersion}-alpine`;
     const envArray = Object.entries({ ...plan.env, ...envVars }).map(([k, v]) => `${k}=${v}`);
     envArray.push(
       `MINI_VERCEL_DEPLOYMENT_ID=${deploymentId}`,
@@ -193,7 +193,7 @@ export class DockerRunner {
 
     try {
       // 1. Create secure container with ZERO host directory bind mounts
-      container = await this.docker.createContainer({
+      const containerOptions = {
         Image: image,
         User: '1000:1000',
         Cmd: ['sh', '-c', shellScript],
@@ -215,7 +215,30 @@ export class DockerRunner {
           AutoRemove: false,
           Binds: [],
         },
-      });
+      };
+
+      try {
+        container = await this.docker.createContainer(containerOptions);
+      } catch (error) {
+        const dockerError = error as { statusCode?: number; message?: string };
+        const imageMissing =
+          dockerError.statusCode === 404 || /no such image/i.test(dockerError.message || '');
+
+        if (!imageMissing) {
+          throw error;
+        }
+
+        onLog(`[SANDBOX] Base image "${image}" is not available locally. Pulling it now...`, 'STDOUT');
+        const pullStream = await this.docker.pull(image);
+        await new Promise<void>((resolve, reject) => {
+          this.docker.modem.followProgress(pullStream, (pullError) => {
+            if (pullError) reject(pullError);
+            else resolve();
+          });
+        });
+        onLog(`[SANDBOX] Base image "${image}" is ready.`, 'STDOUT');
+        container = await this.docker.createContainer(containerOptions);
+      }
 
       // 2. Transfer source code with non-root (UID 1000) ownership via tar stream
       onLog(`[TRANSFER] Streaming source code to ${appDir} via secure tar archive stream...`, 'STDOUT');
@@ -250,11 +273,12 @@ export class DockerRunner {
       });
 
       // 4. Set execution timeout timer
+      const sandboxContainer = container;
       timeoutTimer = setTimeout(async () => {
         hasTimedOut = true;
         onLog(`[TIMEOUT] Build execution exceeded ${timeoutMs / 1000}s limit. Terminating sandbox container...`, 'STDERR');
         try {
-          await container.kill();
+          await sandboxContainer.kill();
         } catch {}
       }, timeoutMs);
 
