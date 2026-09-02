@@ -79,6 +79,9 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install Chromium for Dashboard E2E Tests
+        run: pnpm --filter @mini-vercel/web exec playwright install --with-deps chromium
+
       - name: Dependency Security Audit
         run: pnpm audit --prod
 
@@ -193,6 +196,20 @@ jobs:
 
       - name: Build All Monorepo Packages & Apps
         run: pnpm build
+
+      - name: Run Dashboard Browser E2E Tests
+        run: pnpm --filter @mini-vercel/web test:e2e
+
+      - name: Upload Browser Test Diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pulseops-playwright-diagnostics
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Generate and Upload Complete Software Bill of Materials
         uses: anchore/sbom-action@v0

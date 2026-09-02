@@ -81,6 +81,7 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build
+pnpm --filter @mini-vercel/web test:e2e
 pnpm audit --prod
 docker compose -f deploy/docker-compose.yml config
 ```

@@ -4,8 +4,10 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: 0,
-  reporter: 'list',
+  retries: process.env.CI ? 2 : 0,
+  reporter: process.env.CI
+    ? [['line'], ['html', { open: 'never' }]]
+    : 'list',
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
@@ -19,7 +21,7 @@ export default defineConfig({
   webServer: {
     command: 'pnpm start',
     url: 'http://localhost:3000',
-    reuseExistingServer: true,
+    reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },
 });
