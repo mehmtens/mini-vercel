@@ -9,8 +9,8 @@ This document details standard operating procedures for deploying, monitoring, a
 ### Prerequisites
 1. Dedicated Ubuntu 24.04 LTS VM or bare-metal host with at least 8 vCPU, 16 GB RAM, 160 GB NVMe, Docker 24+, and Docker Compose v2.
 2. Wildcard DNS records configured:
-   - `*.yourdomain.com` -> Host IPv4 / IPv6
-   - `app.yourdomain.com` -> Host IPv4 / IPv6
+   - `*.doplo.dev` -> Host IPv4 / IPv6
+   - `doplo.dev` -> Host IPv4 / IPv6
 3. Ports `80` and `443` open in security groups / firewall.
 4. GitHub authentication or a read-only deploy key configured for the private repository.
 
@@ -47,17 +47,17 @@ This document details standard operating procedures for deploying, monitoring, a
 
 5. **Verify Health & Readiness**:
    ```bash
-   curl -i https://app.yourdomain.com/ready
-   curl -i https://app.yourdomain.com/metrics
+   curl -i https://doplo.dev/ready
+   curl -i https://doplo.dev/metrics
    ```
 
 6. **Verify on-demand TLS authorization**:
    ```bash
    # The management hostname is allowed.
-   curl -i "https://app.yourdomain.com/api/tls/ask?domain=app.yourdomain.com"
+   curl -i "https://doplo.dev/api/tls/ask?domain=doplo.dev"
 
    # An unregistered wildcard hostname must be denied with HTTP 403.
-   curl -i "https://app.yourdomain.com/api/tls/ask?domain=random-unregistered.yourdomain.com"
+   curl -i "https://doplo.dev/api/tls/ask?domain=random-unregistered.doplo.dev"
    ```
 
    Doplo only authorizes certificates for the management hostname, an active
@@ -96,7 +96,7 @@ Doplo uses immutable content-addressed storage in MinIO and atomic database poin
 
 ### A. Application Rollback (User Project Deployment)
 If a user deploys a broken build to production:
-1. Open the project dashboard at `https://app.yourdomain.com/projects/:id`.
+1. Open the project dashboard at `https://doplo.dev/projects/:id`.
 2. Locate the previous `READY` deployment in the deployment history list.
 3. Click the **Rollback** button (or call `POST /api/deployments/:id/rollback`).
 4. **Guarantees**:
@@ -123,5 +123,5 @@ If a new release of the Doplo platform itself introduces a regression:
 4. Confirm health:
    ```bash
    docker compose --env-file .env -f deploy/docker-compose.production.yml ps
-   curl -f https://app.yourdomain.com/ready
+   curl -f https://doplo.dev/ready
    ```
