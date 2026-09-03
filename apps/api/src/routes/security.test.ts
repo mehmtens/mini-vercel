@@ -8,6 +8,7 @@ describe('Application & Edge Security Baseline Integration Tests', () => {
   let app: FastifyInstance;
   let testUser: any;
   let testProject: any;
+  let testDeployment: any;
 
   beforeAll(async () => {
     app = await buildApp();
@@ -32,6 +33,21 @@ describe('Application & Edge Security Baseline Integration Tests', () => {
         repoName: `mini-vercel/${uniqueSlug}`,
         repoUrl: `https://github.com/mini-vercel/${uniqueSlug}`,
       },
+    });
+
+    testDeployment = await prisma.deployment.create({
+      data: {
+        projectId: testProject.id,
+        status: 'READY',
+        trigger: 'MANUAL',
+        branch: 'main',
+        commitHash: 'abcdef0123456789abcdef0123456789abcdef01',
+        s3Prefix: `artifacts/${testProject.id}/tls-ready`,
+      },
+    });
+    testProject = await prisma.project.update({
+      where: { id: testProject.id },
+      data: { currentDeploymentId: testDeployment.id },
     });
   });
 
@@ -100,16 +116,66 @@ describe('Application & Edge Security Baseline Integration Tests', () => {
       expect(json.domain).toBe('app.localhost');
     });
 
-    it('approves TLS certificate for registered project slug domains', async () => {
-      const res = await app.inject({
-        method: 'GET',
-        url: `/api/tls/ask?domain=${testProject.slug}`,
-      });
+    it('approves the registered production hostname only when it has a READY deployment', async () => {
+      const originalBaseDomain = config.app.baseDomain;
+      const originalAppDomain = config.app.domain;
+      try {
+        config.app.baseDomain = 'pulseops.test';
+        config.app.domain = 'app.pulseops.test';
+        const res = await app.inject({
+          method: 'GET',
+          url: `/api/tls/ask?domain=${testProject.slug}.pulseops.test`,
+        });
 
-      expect(res.statusCode).toBe(200);
-      const json = JSON.parse(res.payload);
-      expect(json.allowed).toBe(true);
-      expect(json.projectId).toBe(testProject.id);
+        expect(res.statusCode).toBe(200);
+        const json = JSON.parse(res.payload);
+        expect(json.allowed).toBe(true);
+        expect(json.projectId).toBe(testProject.id);
+        expect(json.deploymentId).toBe(testDeployment.id);
+      } finally {
+        config.app.baseDomain = originalBaseDomain;
+        config.app.domain = originalAppDomain;
+      }
+    });
+
+    it('approves an immutable preview hostname backed by a READY deployment', async () => {
+      const originalBaseDomain = config.app.baseDomain;
+      const originalAppDomain = config.app.domain;
+      try {
+        config.app.baseDomain = 'pulseops.test';
+        config.app.domain = 'app.pulseops.test';
+        const res = await app.inject({
+          method: 'GET',
+          url: `/api/tls/ask?domain=${testProject.slug}-abcdef0.pulseops.test`,
+        });
+
+        expect(res.statusCode).toBe(200);
+        const json = JSON.parse(res.payload);
+        expect(json.allowed).toBe(true);
+        expect(json.deploymentId).toBe(testDeployment.id);
+      } finally {
+        config.app.baseDomain = originalBaseDomain;
+        config.app.domain = originalAppDomain;
+      }
+    });
+
+    it('rejects an arbitrary hostname under BASE_DOMAIN to protect ACME limits', async () => {
+      const originalBaseDomain = config.app.baseDomain;
+      const originalAppDomain = config.app.domain;
+      try {
+        config.app.baseDomain = 'pulseops.test';
+        config.app.domain = 'app.pulseops.test';
+        const res = await app.inject({
+          method: 'GET',
+          url: '/api/tls/ask?domain=unregistered-random-host.pulseops.test',
+        });
+
+        expect(res.statusCode).toBe(403);
+        expect(JSON.parse(res.payload).allowed).toBe(false);
+      } finally {
+        config.app.baseDomain = originalBaseDomain;
+        config.app.domain = originalAppDomain;
+      }
     });
 
     it('rejects unauthorized or unknown custom domains with 403 Forbidden to prevent TLS abuse', async () => {

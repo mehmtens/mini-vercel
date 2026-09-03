@@ -46,7 +46,7 @@
 }
 
 # ------------------------------------------------------------------------------
-# 2. Dynamic Preview & Project Custom Domains (On-Demand TLS with Ask validation)
+# 2. Dynamic Preview & Project Domains (On-Demand TLS with Ask validation)
 # Resolves immutable static assets through Fastify Artifact Gateway
 # ------------------------------------------------------------------------------
 :443 {

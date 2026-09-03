@@ -47,9 +47,23 @@ This document details standard operating procedures for deploying, monitoring, a
 
 5. **Verify Health & Readiness**:
    ```bash
-   curl -i https://app.yourdomain.com/health/ready
+   curl -i https://app.yourdomain.com/ready
    curl -i https://app.yourdomain.com/metrics
    ```
+
+6. **Verify on-demand TLS authorization**:
+   ```bash
+   # The management hostname is allowed.
+   curl -i "https://app.yourdomain.com/api/tls/ask?domain=app.yourdomain.com"
+
+   # An unregistered wildcard hostname must be denied with HTTP 403.
+   curl -i "https://app.yourdomain.com/api/tls/ask?domain=random-unregistered.yourdomain.com"
+   ```
+
+   PulseOps only authorizes certificates for the management hostname, an active
+   project hostname, or a `READY` immutable preview. Arbitrary wildcard and
+   external custom domains remain fail-closed until domain ownership verification
+   and an explicit custom-domain registry are implemented.
 
 ---
 
@@ -109,5 +123,5 @@ If a new release of the PulseOps platform itself introduces a regression:
 4. Confirm health:
    ```bash
    docker compose --env-file .env -f deploy/docker-compose.production.yml ps
-   curl -f https://app.yourdomain.com/health/ready
+   curl -f https://app.yourdomain.com/ready
    ```
