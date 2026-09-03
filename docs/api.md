@@ -1,4 +1,4 @@
-# PulseOps API Reference
+# Doplo API Reference
 
 Yerel base URL: `http://localhost:8081`
 

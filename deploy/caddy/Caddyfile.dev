@@ -1,5 +1,5 @@
 # ==============================================================================
-# Mini-Vercel Development Caddyfile (Local HTTP Mode)
+# Doplo Development Caddyfile (Local HTTP Mode)
 # ==============================================================================
 {
 	admin off

@@ -1,9 +1,9 @@
 apiVersion: 1
 
 providers:
-  - name: "Mini-Vercel Dashboards"
+  - name: "Doplo Dashboards"
     orgId: 1
-    folder: "Mini-Vercel"
+    folder: "Doplo"
     type: file
     disableDeletion: false
     editable: true

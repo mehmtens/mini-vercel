@@ -1,8 +1,8 @@
 # ==============================================================================
-# PulseOps Production Caddyfile (HTTPS + On-Demand TLS + Gateway)
+# Doplo Production Caddyfile (HTTPS + On-Demand TLS + Gateway)
 # ==============================================================================
 {
-	email {$ACME_EMAIL:admin@mini-vercel.app}
+	email {$ACME_EMAIL:admin@doplo.app}
 	on_demand_tls {
 		ask http://api:8080/api/tls/ask
 	}
@@ -11,7 +11,7 @@
 # ------------------------------------------------------------------------------
 # 1. Main Management Dashboard & API
 # ------------------------------------------------------------------------------
-{$APP_DOMAIN:app.mini-vercel.app} {
+{$APP_DOMAIN:app.doplo.app} {
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 		X-Content-Type-Options nosniff

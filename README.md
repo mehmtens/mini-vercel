@@ -1,6 +1,8 @@
-# PulseOps
+# Doplo
 
-PulseOps, GitHub depolarındaki statik web uygulamalarını izole Docker sandbox'larında derleyen, canlı log yayınlayan, MinIO üzerinde immutable artifact saklayan ve hızlı promote/rollback sağlayan tek sunuculu bir PaaS'tır.
+> Push. Build. Live.
+
+Doplo, GitHub depolarındaki statik web uygulamalarını izole Docker sandbox'larında derleyen, canlı log yayınlayan, MinIO üzerinde immutable artifact saklayan ve hızlı promote/rollback sağlayan tek sunuculu bir PaaS'tır.
 
 İlk MVP; Vite, React, Vue, Astro, düz statik siteler ve Next.js static export akışlarını hedefler. Node.js SSR, Kubernetes, multi-region ve serverless runtime bu sürümün kapsamı dışındadır.
 
@@ -44,7 +46,7 @@ Başarısız veya kullanıcı tarafından durdurulan işler `FAILED` / `CANCELLE
 
 ```text
 apps/api       Fastify API, GitHub OAuth/webhook, SSE, artifact gateway
-apps/web       PulseOps yönetim paneli
+apps/web       Doplo yönetim paneli
 apps/worker    BullMQ worker, Docker sandbox, artifact yükleme
 packages       config, crypto, database ve ortak tip paketleri
 deploy         local/production Compose, Caddy ve observability tanımları
@@ -57,8 +59,8 @@ docs           mimari, API ve operasyon runbook'ları
 Gereksinimler: Docker Desktop, Node.js `22.13+ <23` ve pnpm `11.22.0`.
 
 ```bash
-git clone https://github.com/mehmtens/mini-vercel.git
-cd mini-vercel
+git clone https://github.com/mehmtens/mini-vercel.git doplo
+cd doplo
 cp .env.example .env
 pnpm install --frozen-lockfile
 pnpm docker:up
@@ -81,12 +83,12 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build
-pnpm --filter @mini-vercel/web test:e2e
+pnpm --filter @doplo/web test:e2e
 pnpm audit --prod
 docker compose -f deploy/docker-compose.yml config
 ```
 
-`pnpm test`, `mini_vercel_test` adında izole bir veritabanı oluşturur, migration'ları uygular ve test sonunda veritabanını kaldırır. Normal `mini_vercel` veritabanına test verisi yazmaz.
+`pnpm test`, `doplo_test` adında izole bir veritabanı oluşturur, migration'ları uygular ve test sonunda veritabanını kaldırır. Normal `doplo` veritabanına test verisi yazmaz.
 
 ## Temel API yolları
 

@@ -2,7 +2,7 @@
 
 # Default target
 help:
-	@echo "Mini-Vercel Monorepo Commands:"
+	@echo "Doplo Monorepo Commands:"
 	@echo "  make up          - Start PostgreSQL and Redis via Docker Compose"
 	@echo "  make down        - Stop Docker Compose services"
 	@echo "  make logs        - Tail logs from Docker Compose services"

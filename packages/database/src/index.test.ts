@@ -235,7 +235,7 @@ describe('Prisma PostgreSQL Database Integration Tests', () => {
     await db.updateDeploymentStatus(
       testDeploymentId,
       'READY',
-      'https://preview-test.mini-vercel.app',
+      'https://preview-test.doplo.app',
       1200
     );
 
@@ -243,7 +243,7 @@ describe('Prisma PostgreSQL Database Integration Tests', () => {
       where: { id: testDeploymentId },
     });
     expect(updatedDep?.status).toBe(DeploymentStatus.READY);
-    expect(updatedDep?.previewUrl).toBe('https://preview-test.mini-vercel.app');
+    expect(updatedDep?.previewUrl).toBe('https://preview-test.doplo.app');
 
     const stats = await db.getStats();
     expect(stats.total_deployments).toBeGreaterThan(0);

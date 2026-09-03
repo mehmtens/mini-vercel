@@ -1,0 +1,12 @@
+[Unit]
+Description=Doplo PostgreSQL Automated Backup Job
+After=network.target docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/doplo
+EnvironmentFile=-/opt/doplo/.env
+ExecStart=/bin/bash /opt/doplo/scripts/backup-db.sh
+StandardOutput=journal
+StandardError=journal
+User=root

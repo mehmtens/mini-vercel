@@ -4,7 +4,7 @@ import {
   InvalidStateTransitionError,
   isValidTransition,
   isTerminalStatus,
-} from '@mini-vercel/types';
+} from '@doplo/types';
 
 export {
   ALLOWED_STATE_TRANSITIONS,

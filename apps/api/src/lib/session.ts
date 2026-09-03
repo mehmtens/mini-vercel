@@ -1,8 +1,8 @@
 import crypto from 'crypto';
 import { redisConnection } from './queue';
-import { prisma } from '@mini-vercel/database';
-import { encrypt, decrypt } from '@mini-vercel/crypto';
-import { config } from '@mini-vercel/config';
+import { prisma } from '@doplo/database';
+import { encrypt, decrypt } from '@doplo/crypto';
+import { config } from '@doplo/config';
 
 const SESSION_PREFIX = 'session:';
 const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days

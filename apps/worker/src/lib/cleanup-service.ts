@@ -3,8 +3,8 @@ import path from 'path';
 import os from 'os';
 import Docker from 'dockerode';
 import * as Minio from 'minio';
-import { prisma } from '@mini-vercel/database';
-import { config } from '@mini-vercel/config';
+import { prisma } from '@doplo/database';
+import { config } from '@doplo/config';
 import { workerCleanupErrorsCounter } from './metrics';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -213,7 +213,7 @@ export class CleanupService {
       const now = Math.floor(Date.now() / 1000);
 
       for (const containerInfo of containers) {
-        const isBuildContainer = containerInfo.Names.some((n) => n.includes('mini-vercel-build-'));
+        const isBuildContainer = containerInfo.Names.some((n) => n.includes('doplo-build-'));
         const ageMinutes = (now - containerInfo.Created) / 60;
 
         if (isBuildContainer && ageMinutes > maxAgeMinutes) {
@@ -247,7 +247,7 @@ export class CleanupService {
     try {
       const entries = fs.readdirSync(tmpDir);
       for (const entry of entries) {
-        if (entry.startsWith('mini-vercel-build-')) {
+        if (entry.startsWith('doplo-build-')) {
           const fullPath = path.join(tmpDir, entry);
           count++;
           if (!dryRun) {

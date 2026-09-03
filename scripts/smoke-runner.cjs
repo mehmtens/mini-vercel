@@ -56,8 +56,8 @@ async function executeRollbackSmoke() {
       userId: user.id,
       name: unique,
       slug: unique,
-      repoName: 'mini-vercel/' + unique,
-      repoUrl: 'https://github.com/mini-vercel/' + unique,
+      repoName: 'doplo/' + unique,
+      repoUrl: 'https://github.com/doplo/' + unique,
     },
   });
 

@@ -1,11 +1,11 @@
 # ==============================================================================
-# Mini-Vercel Observability Stack (Prometheus, Grafana & Node Exporter)
+# Doplo Observability Stack (Prometheus, Grafana & Node Exporter)
 # Usage: docker compose -f deploy/docker-compose.production.yml -f deploy/docker-compose.observability.yml up -d
 # ==============================================================================
 services:
   prometheus:
     image: prom/prometheus:v2.54.1
-    container_name: mini_vercel_prometheus
+    container_name: doplo_prometheus
     restart: always
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
@@ -23,11 +23,11 @@ services:
           cpus: '1.0'
           memory: 1G
     networks:
-      - mini_vercel_network
+      - doplo_network
 
   node-exporter:
     image: prom/node-exporter:v1.8.2
-    container_name: mini_vercel_node_exporter
+    container_name: doplo_node_exporter
     restart: always
     command:
       - "--collector.textfile.directory=/etc/node-exporter/textfile_collector"
@@ -41,11 +41,11 @@ services:
           cpus: '0.25'
           memory: 128M
     networks:
-      - mini_vercel_network
+      - doplo_network
 
   grafana:
     image: grafana/grafana:11.2.0
-    container_name: mini_vercel_grafana
+    container_name: doplo_grafana
     restart: always
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
@@ -62,12 +62,12 @@ services:
           cpus: '0.5'
           memory: 512M
     networks:
-      - mini_vercel_network
+      - doplo_network
 
 volumes:
   prometheus_data:
-    name: mini_vercel_prometheus_data
+    name: doplo_prometheus_data
   grafana_data:
-    name: mini_vercel_grafana_data
+    name: doplo_grafana_data
   node_exporter_textfile:
-    name: mini_vercel_node_exporter_textfile
+    name: doplo_node_exporter_textfile

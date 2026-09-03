@@ -1,5 +1,7 @@
+name: doplo
+
 # ==============================================================================
-# PulseOps Hardened Production Docker Compose Stack
+# Doplo Hardened Production Docker Compose Stack
 # ==============================================================================
 # - Fail-fast required secrets (no insecure default fallbacks)
 # - Container resource limits (CPU & Memory caps)
@@ -11,12 +13,12 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: mini_vercel_postgres_prod
+    container_name: doplo_postgres_prod
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
-      POSTGRES_DB: ${POSTGRES_DB:-mini_vercel}
+      POSTGRES_DB: ${POSTGRES_DB:-doplo}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     deploy:
@@ -35,11 +37,11 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - mini_vercel_network
+      - doplo_network
 
   redis:
     image: redis:7-alpine
-    container_name: mini_vercel_redis_prod
+    container_name: doplo_redis_prod
     restart: always
     command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD:?REDIS_PASSWORD is required}"
     environment:
@@ -62,11 +64,11 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - mini_vercel_network
+      - doplo_network
 
   minio:
     image: minio/minio:RELEASE.2024-01-18T22-51-28Z
-    container_name: mini_vercel_minio_prod
+    container_name: doplo_minio_prod
     restart: always
     command: server /data
     environment:
@@ -90,18 +92,18 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - mini_vercel_network
+      - doplo_network
 
   minio-init:
     image: minio/mc:RELEASE.2025-08-13T08-35-41Z
-    container_name: mini_vercel_minio_init_prod
+    container_name: doplo_minio_init_prod
     depends_on:
       minio:
         condition: service_healthy
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
-      MINIO_BUCKET_BUILDS: ${MINIO_BUCKET_BUILDS:-mini-vercel-builds}
+      MINIO_BUCKET_BUILDS: ${MINIO_BUCKET_BUILDS:-doplo-builds}
     entrypoint:
       - /bin/sh
       - -ec
@@ -109,29 +111,29 @@ services:
         mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"
         mc mb --ignore-existing "local/$$MINIO_BUCKET_BUILDS"
     networks:
-      - mini_vercel_network
+      - doplo_network
 
   db-migrate:
     build:
       context: ..
       dockerfile: apps/api/Dockerfile
-    container_name: mini_vercel_migrate_prod
+    container_name: doplo_migrate_prod
     restart: "no"
-    command: ["pnpm", "--filter", "@mini-vercel/database", "db:migrate:deploy"]
+    command: ["pnpm", "--filter", "@doplo/database", "db:migrate:deploy"]
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-mini_vercel}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-doplo}
     depends_on:
       postgres:
         condition: service_healthy
     networks:
-      - mini_vercel_network
+      - doplo_network
 
   api:
     build:
       context: ..
       dockerfile: apps/api/Dockerfile
-    container_name: mini_vercel_api_prod
+    container_name: doplo_api_prod
     restart: always
     init: true
     read_only: true
@@ -145,14 +147,14 @@ services:
       NODE_ENV: production
       API_PORT: 8080
       API_HOST: 0.0.0.0
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-mini_vercel}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-doplo}
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
       MINIO_USE_SSL: "false"
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
-      MINIO_BUCKET_BUILDS: ${MINIO_BUCKET_BUILDS:-mini-vercel-builds}
+      MINIO_BUCKET_BUILDS: ${MINIO_BUCKET_BUILDS:-doplo-builds}
       QUEUE_NAME: ${QUEUE_NAME:-deployment-queue}
       SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
       CRYPTO_MASTER_KEY: ${CRYPTO_MASTER_KEY:?CRYPTO_MASTER_KEY is required}
@@ -190,13 +192,13 @@ services:
       db-migrate:
         condition: service_completed_successfully
     networks:
-      - mini_vercel_network
+      - doplo_network
 
   worker:
     build:
       context: ..
       dockerfile: apps/worker/Dockerfile
-    container_name: mini_vercel_worker_prod
+    container_name: doplo_worker_prod
     restart: always
     init: true
     read_only: true
@@ -208,14 +210,14 @@ services:
       - ALL
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-mini_vercel}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-doplo}
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
       MINIO_USE_SSL: "false"
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
-      MINIO_BUCKET_BUILDS: ${MINIO_BUCKET_BUILDS:-mini-vercel-builds}
+      MINIO_BUCKET_BUILDS: ${MINIO_BUCKET_BUILDS:-doplo-builds}
       QUEUE_NAME: ${QUEUE_NAME:-deployment-queue}
       QUEUE_CONCURRENCY: ${QUEUE_CONCURRENCY:-5}
       CRYPTO_MASTER_KEY: ${CRYPTO_MASTER_KEY:?CRYPTO_MASTER_KEY is required}
@@ -249,7 +251,7 @@ services:
       db-migrate:
         condition: service_completed_successfully
     networks:
-      - mini_vercel_network
+      - doplo_network
 
   web:
     build:
@@ -258,7 +260,7 @@ services:
       args:
         NEXT_PUBLIC_API_URL: https://${APP_DOMAIN}
         NEXT_PUBLIC_BASE_DOMAIN: ${BASE_DOMAIN}
-    container_name: mini_vercel_web_prod
+    container_name: doplo_web_prod
     restart: always
     init: true
     read_only: true
@@ -292,11 +294,11 @@ services:
       api:
         condition: service_healthy
     networks:
-      - mini_vercel_network
+      - doplo_network
 
   caddy:
     image: caddy:2-alpine
-    container_name: mini_vercel_caddy_prod
+    container_name: doplo_caddy_prod
     restart: always
     ports:
       - "80:80"
@@ -331,21 +333,21 @@ services:
       web:
         condition: service_healthy
     networks:
-      - mini_vercel_network
+      - doplo_network
 
 volumes:
   postgres_data:
-    name: mini_vercel_postgres_prod_data
+    name: doplo_postgres_prod_data
   redis_data:
-    name: mini_vercel_redis_prod_data
+    name: doplo_redis_prod_data
   minio_data:
-    name: mini_vercel_minio_prod_data
+    name: doplo_minio_prod_data
   caddy_data:
-    name: mini_vercel_caddy_prod_data
+    name: doplo_caddy_prod_data
   caddy_config:
-    name: mini_vercel_caddy_prod_config
+    name: doplo_caddy_prod_config
 
 networks:
-  mini_vercel_network:
-    name: mini_vercel_prod_network
+  doplo_network:
+    name: doplo_prod_network
     driver: bridge

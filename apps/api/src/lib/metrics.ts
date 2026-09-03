@@ -1,16 +1,16 @@
 import { Registry, collectDefaultMetrics, Counter, Histogram, Gauge } from 'prom-client';
 import { FastifyInstance, FastifyPluginAsync } from 'fastify';
 
-// Create a unified Prometheus Registry for Mini-Vercel
+// Create a unified Prometheus Registry for Doplo
 export const register = new Registry();
 
 // Collect Node.js process / runtime metrics (memory, cpu, event loop lag, etc.)
-collectDefaultMetrics({ register, prefix: 'mini_vercel_' });
+collectDefaultMetrics({ register, prefix: 'doplo_' });
 
 // 1. HTTP Request Counter & Duration Histogram
 export const httpRequestCounter = new Counter({
   name: 'http_requests_total',
-  help: 'Total number of HTTP requests processed by Mini-Vercel API',
+  help: 'Total number of HTTP requests processed by Doplo API',
   labelNames: ['method', 'route', 'status_code'],
   registers: [register],
 });
@@ -25,7 +25,7 @@ export const httpRequestDuration = new Histogram({
 
 // 2. Queue Wait Duration Histogram
 export const queueWaitDuration = new Histogram({
-  name: 'mini_vercel_queue_wait_duration_seconds',
+  name: 'doplo_queue_wait_duration_seconds',
   help: 'Duration a deployment job spent waiting in BullMQ before worker pickup',
   labelNames: ['queue_name'],
   buckets: [0.1, 0.5, 1, 2, 5, 10, 30, 60, 120],
@@ -34,7 +34,7 @@ export const queueWaitDuration = new Histogram({
 
 // 3. Build Duration Histogram
 export const buildDuration = new Histogram({
-  name: 'mini_vercel_build_duration_seconds',
+  name: 'doplo_build_duration_seconds',
   help: 'Total build execution duration in seconds',
   labelNames: ['status', 'framework'],
   buckets: [1, 5, 10, 20, 30, 60, 120, 300, 600],
@@ -43,21 +43,21 @@ export const buildDuration = new Histogram({
 
 // 4. Deployments Total Counter & Active Gauge
 export const deploymentsCounter = new Counter({
-  name: 'mini_vercel_deployments_total',
+  name: 'doplo_deployments_total',
   help: 'Total count of deployments categorized by terminal status (READY, FAILED, CANCELLED)',
   labelNames: ['status'],
   registers: [register],
 });
 
 export const activeDeploymentsGauge = new Gauge({
-  name: 'mini_vercel_active_deployments_gauge',
+  name: 'doplo_active_deployments_gauge',
   help: 'Current number of in-flight active deployments',
   registers: [register],
 });
 
 // 5. Artifact Fetch Duration Histogram
 export const artifactFetchDuration = new Histogram({
-  name: 'mini_vercel_artifact_fetch_duration_seconds',
+  name: 'doplo_artifact_fetch_duration_seconds',
   help: 'Latency of fetching immutable deployment build artifacts from MinIO storage',
   labelNames: ['status'],
   buckets: [0.002, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2],
@@ -66,7 +66,7 @@ export const artifactFetchDuration = new Histogram({
 
 // 6. Log Delivery Events Counter
 export const logDeliveryEventsCounter = new Counter({
-  name: 'mini_vercel_log_delivery_events_total',
+  name: 'doplo_log_delivery_events_total',
   help: 'Total number of live or replay log lines delivered via SSE stream',
   labelNames: ['stream_type'],
   registers: [register],
@@ -74,14 +74,14 @@ export const logDeliveryEventsCounter = new Counter({
 
 // 7. Queue Waiting & Active Jobs Gauges
 export const queueWaitingJobsGauge = new Gauge({
-  name: 'mini_vercel_queue_waiting_jobs_gauge',
+  name: 'doplo_queue_waiting_jobs_gauge',
   help: 'Number of deployment jobs currently waiting in queue',
   labelNames: ['queue_name'],
   registers: [register],
 });
 
 export const queueActiveJobsGauge = new Gauge({
-  name: 'mini_vercel_queue_active_jobs_gauge',
+  name: 'doplo_queue_active_jobs_gauge',
   help: 'Number of deployment jobs currently actively processing',
   labelNames: ['queue_name'],
   registers: [register],
@@ -89,7 +89,7 @@ export const queueActiveJobsGauge = new Gauge({
 
 // 8. Dependency Up Health Status Gauge (1 = UP, 0 = DOWN)
 export const dependencyUpGauge = new Gauge({
-  name: 'mini_vercel_dependency_up_gauge',
+  name: 'doplo_dependency_up_gauge',
   help: 'Health state of dependent backend infrastructure components (1 = UP, 0 = DOWN)',
   labelNames: ['dependency'],
   registers: [register],
@@ -97,7 +97,7 @@ export const dependencyUpGauge = new Gauge({
 
 // 9. Backup Last Success Timestamp Gauge
 export const backupLastSuccessTimestamp = new Gauge({
-  name: 'mini_vercel_backup_last_success_timestamp_seconds',
+  name: 'doplo_backup_last_success_timestamp_seconds',
   help: 'Unix timestamp in seconds of the last successful backup completion',
   labelNames: ['target'],
   registers: [register],
@@ -105,7 +105,7 @@ export const backupLastSuccessTimestamp = new Gauge({
 
 // 10. Cleanup Operations Errors Counter
 export const cleanupErrorsCounter = new Counter({
-  name: 'mini_vercel_cleanup_errors_total',
+  name: 'doplo_cleanup_errors_total',
   help: 'Total count of errors encountered during background resource cleanup jobs',
   labelNames: ['component'],
   registers: [register],

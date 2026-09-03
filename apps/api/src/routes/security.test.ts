@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { buildApp, validateEnvironmentSecurity } from '../index';
-import { prisma } from '@mini-vercel/database';
-import { validateProductionSecrets, config } from '@mini-vercel/config';
+import { prisma } from '@doplo/database';
+import { validateProductionSecrets, config } from '@doplo/config';
 
 describe('Application & Edge Security Baseline Integration Tests', () => {
   let app: FastifyInstance;
@@ -20,7 +20,7 @@ describe('Application & Edge Security Baseline Integration Tests', () => {
       create: {
         githubId: 'gh_sec_user',
         username: 'sec_user',
-        email: 'sec_user@mini-vercel.local',
+        email: 'sec_user@doplo.local',
       },
     });
 
@@ -30,8 +30,8 @@ describe('Application & Edge Security Baseline Integration Tests', () => {
         userId: testUser.id,
         name: uniqueSlug,
         slug: uniqueSlug,
-        repoName: `mini-vercel/${uniqueSlug}`,
-        repoUrl: `https://github.com/mini-vercel/${uniqueSlug}`,
+        repoName: `doplo/${uniqueSlug}`,
+        repoUrl: `https://github.com/doplo/${uniqueSlug}`,
       },
     });
 
@@ -120,11 +120,11 @@ describe('Application & Edge Security Baseline Integration Tests', () => {
       const originalBaseDomain = config.app.baseDomain;
       const originalAppDomain = config.app.domain;
       try {
-        config.app.baseDomain = 'pulseops.test';
-        config.app.domain = 'app.pulseops.test';
+        config.app.baseDomain = 'doplo.test';
+        config.app.domain = 'app.doplo.test';
         const res = await app.inject({
           method: 'GET',
-          url: `/api/tls/ask?domain=${testProject.slug}.pulseops.test`,
+          url: `/api/tls/ask?domain=${testProject.slug}.doplo.test`,
         });
 
         expect(res.statusCode).toBe(200);
@@ -142,11 +142,11 @@ describe('Application & Edge Security Baseline Integration Tests', () => {
       const originalBaseDomain = config.app.baseDomain;
       const originalAppDomain = config.app.domain;
       try {
-        config.app.baseDomain = 'pulseops.test';
-        config.app.domain = 'app.pulseops.test';
+        config.app.baseDomain = 'doplo.test';
+        config.app.domain = 'app.doplo.test';
         const res = await app.inject({
           method: 'GET',
-          url: `/api/tls/ask?domain=${testProject.slug}-abcdef0.pulseops.test`,
+          url: `/api/tls/ask?domain=${testProject.slug}-abcdef0.doplo.test`,
         });
 
         expect(res.statusCode).toBe(200);
@@ -163,11 +163,11 @@ describe('Application & Edge Security Baseline Integration Tests', () => {
       const originalBaseDomain = config.app.baseDomain;
       const originalAppDomain = config.app.domain;
       try {
-        config.app.baseDomain = 'pulseops.test';
-        config.app.domain = 'app.pulseops.test';
+        config.app.baseDomain = 'doplo.test';
+        config.app.domain = 'app.doplo.test';
         const res = await app.inject({
           method: 'GET',
-          url: '/api/tls/ask?domain=unregistered-random-host.pulseops.test',
+          url: '/api/tls/ask?domain=unregistered-random-host.doplo.test',
         });
 
         expect(res.statusCode).toBe(403);

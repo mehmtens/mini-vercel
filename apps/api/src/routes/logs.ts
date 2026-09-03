@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { prisma } from '@mini-vercel/database';
+import { prisma } from '@doplo/database';
 import Redis from 'ioredis';
-import { config } from '@mini-vercel/config';
+import { config } from '@doplo/config';
 import { authenticateRequest } from '../lib/auth';
 
 const MAX_PENDING_QUEUE = 500;

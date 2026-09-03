@@ -1,8 +1,8 @@
 import { FastifyInstance, FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 import { authenticateRequest } from '../lib/auth';
 import { getUserGitHubToken } from '../lib/session';
-import { prisma } from '@mini-vercel/database';
-import { config } from '@mini-vercel/config';
+import { prisma } from '@doplo/database';
+import { config } from '@doplo/config';
 import { getInstallationToken, getUserAuthorizedRepositories } from '../lib/github-app';
 
 const IDENTIFIER_REGEX = /^[a-zA-Z0-9._-]+$/;
@@ -290,7 +290,7 @@ export async function registerGitHubRoutes(app: FastifyInstance) {
           private: false,
           html_url: `https://github.com/${authUser.username}/my-awesome-next-app`,
           default_branch: 'main',
-          description: 'Production-ready Next.js application on Mini-Vercel',
+          description: 'Production-ready Next.js application on Doplo',
           updated_at: new Date().toISOString(),
         },
         {
@@ -320,7 +320,7 @@ export async function registerGitHubRoutes(app: FastifyInstance) {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'User-Agent': 'mini-vercel-app',
+            'User-Agent': 'doplo-app',
             Accept: 'application/vnd.github.v3+json',
           },
         }
@@ -441,7 +441,7 @@ export async function registerGitHubRoutes(app: FastifyInstance) {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'User-Agent': 'mini-vercel-app',
+            'User-Agent': 'doplo-app',
             Accept: 'application/vnd.github.v3+json',
           },
         }

@@ -145,7 +145,7 @@ describe('Deployment State Machine & Atomic Transitions', () => {
       const res5 = await transitionDeploymentState(prisma, {
         deploymentId: dep.id,
         toStatus: 'DEPLOYING',
-        previewUrl: `https://${testProjectId}.mini-vercel.app`,
+        previewUrl: `https://${testProjectId}.doplo.app`,
       });
       expect(res5.success).toBe(true);
       expect(res5.toStatus).toBe('DEPLOYING');

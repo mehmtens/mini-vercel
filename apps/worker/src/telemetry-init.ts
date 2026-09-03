@@ -6,7 +6,7 @@ import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
-import { config } from '@mini-vercel/config';
+import { config } from '@doplo/config';
 
 let workerSdk: NodeSDK | null = null;
 
@@ -17,7 +17,7 @@ export function initWorkerTelemetry(): NodeSDK | null {
     try {
       workerSdk = new NodeSDK({
         resource: resourceFromAttributes({
-          [ATTR_SERVICE_NAME]: 'pulseops-worker',
+          [ATTR_SERVICE_NAME]: 'doplo-worker',
           [ATTR_SERVICE_VERSION]: '1.0.0',
           [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: config.env,
         }),

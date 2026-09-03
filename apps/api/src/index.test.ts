@@ -2,9 +2,9 @@ import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { buildApp, validateEnvironmentSecurity } from './index';
 import { getUserGitHubToken, storeUserGitHubToken } from './lib/session';
-import { prisma } from '@mini-vercel/database';
-import { createHmacSignature } from '@mini-vercel/crypto';
-import { config } from '@mini-vercel/config';
+import { prisma } from '@doplo/database';
+import { createHmacSignature } from '@doplo/crypto';
+import { config } from '@doplo/config';
 import { minioClient } from './lib/minio';
 import { deploymentQueue, redisConnection } from './lib/queue.js';
 import * as healthModule from './routes/health';
@@ -25,7 +25,7 @@ describe('Fastify REST API Integration Tests', () => {
       create: {
         githubId: 'gh_user_alice',
         username: 'alice',
-        email: 'alice@mini-vercel.local',
+        email: 'alice@doplo.local',
       },
     });
     userA = { id: createdA.id, username: createdA.username };
@@ -36,7 +36,7 @@ describe('Fastify REST API Integration Tests', () => {
       create: {
         githubId: 'gh_user_bob',
         username: 'bob',
-        email: 'bob@mini-vercel.local',
+        email: 'bob@doplo.local',
       },
     });
     userB = { id: createdB.id, username: createdB.username };
@@ -189,7 +189,7 @@ describe('Fastify REST API Integration Tests', () => {
           payload: {
             name: `Project ${slug}`,
             slug,
-            repoUrl: 'https://github.com/mini-vercel/test-app',
+            repoUrl: 'https://github.com/doplo/test-app',
           },
         });
 
@@ -774,7 +774,7 @@ describe('Fastify REST API Integration Tests', () => {
     it('GET /api/github/repos/:owner/:repo/branches returns branch list for valid repo', async () => {
       const response = await app.inject({
         method: 'GET',
-        url: '/api/github/repos/mini-vercel/demo-app/branches',
+        url: '/api/github/repos/doplo/demo-app/branches',
         headers: {
           'x-user-id': userA.id,
         },
@@ -1024,7 +1024,7 @@ describe('Fastify REST API Integration Tests', () => {
           commitHash: gwCommitSha,
           branch: 'main',
           s3Prefix,
-          previewUrl: `https://${gwSlug}-${gwShortSha}.mini-vercel.app`,
+          previewUrl: `https://${gwSlug}-${gwShortSha}.doplo.app`,
         },
       });
       gwDeploymentReadyId = depReady.id;
@@ -1055,8 +1055,8 @@ describe('Fastify REST API Integration Tests', () => {
           await minioClient.makeBucket(config.minio.bucketBuilds, 'us-east-1');
         }
 
-        const htmlContent = '<!DOCTYPE html><html><body><h1>Mini-Vercel Artifact Gateway App</h1></body></html>';
-        const jsContent = 'console.log("Mini-Vercel Vite Production Bundle");';
+        const htmlContent = '<!DOCTYPE html><html><body><h1>Doplo Artifact Gateway App</h1></body></html>';
+        const jsContent = 'console.log("Doplo Vite Production Bundle");';
         const cssContent = 'body { font-family: sans-serif; background: #000; }';
         const svgContent = '<svg xmlns="http://www.w3.org/2000/svg"><circle r="10"/></svg>';
 
@@ -1111,7 +1111,7 @@ describe('Fastify REST API Integration Tests', () => {
         method: 'GET',
         url: '/',
         headers: {
-          host: `${gwSlug}-${gwShortSha}.mini-vercel.app`,
+          host: `${gwSlug}-${gwShortSha}.doplo.app`,
         },
       });
 
@@ -1119,7 +1119,7 @@ describe('Fastify REST API Integration Tests', () => {
       if (res.statusCode === 200) {
         expect(res.headers['content-type']).toBe('text/html; charset=utf-8');
         expect(res.headers['cache-control']).toBe('public, max-age=0, must-revalidate');
-        expect(res.body).toContain('Mini-Vercel Artifact Gateway App');
+        expect(res.body).toContain('Doplo Artifact Gateway App');
       } else {
         expect([200, 404]).toContain(res.statusCode);
       }
@@ -1130,7 +1130,7 @@ describe('Fastify REST API Integration Tests', () => {
         method: 'GET',
         url: '/assets/main-c8b1a2.js',
         headers: {
-          host: `${gwSlug}-${gwShortSha}.mini-vercel.app`,
+          host: `${gwSlug}-${gwShortSha}.doplo.app`,
         },
       });
 
@@ -1138,7 +1138,7 @@ describe('Fastify REST API Integration Tests', () => {
         expect(res.headers['content-type']).toBe('application/javascript; charset=utf-8');
         expect(res.headers['cache-control']).toBe('public, max-age=31536000, immutable');
         expect(res.headers['etag']).toBeDefined();
-        expect(res.body).toContain('Mini-Vercel Vite Production Bundle');
+        expect(res.body).toContain('Doplo Vite Production Bundle');
 
         // Test 304 Not Modified conditional request
         const etag = res.headers['etag'] as string;
@@ -1146,7 +1146,7 @@ describe('Fastify REST API Integration Tests', () => {
           method: 'GET',
           url: '/assets/main-c8b1a2.js',
           headers: {
-            host: `${gwSlug}-${gwShortSha}.mini-vercel.app`,
+            host: `${gwSlug}-${gwShortSha}.doplo.app`,
             'if-none-match': etag,
           },
         });
@@ -1159,13 +1159,13 @@ describe('Fastify REST API Integration Tests', () => {
         method: 'GET',
         url: '/',
         headers: {
-          host: `${gwSlug}.mini-vercel.app`,
+          host: `${gwSlug}.doplo.app`,
         },
       });
 
       if (res.statusCode === 200) {
         expect(res.headers['content-type']).toBe('text/html; charset=utf-8');
-        expect(res.body).toContain('Mini-Vercel Artifact Gateway App');
+        expect(res.body).toContain('Doplo Artifact Gateway App');
       }
     });
 
@@ -1174,7 +1174,7 @@ describe('Fastify REST API Integration Tests', () => {
         method: 'GET',
         url: '/',
         headers: {
-          host: `${gwSlug}-fffffff.mini-vercel.app`,
+          host: `${gwSlug}-fffffff.doplo.app`,
         },
       });
 
@@ -1206,13 +1206,13 @@ describe('Fastify REST API Integration Tests', () => {
         method: 'GET',
         url: '/dashboard/settings/billing',
         headers: {
-          host: `${gwSlug}-${gwShortSha}.mini-vercel.app`,
+          host: `${gwSlug}-${gwShortSha}.doplo.app`,
         },
       });
 
       if (res.statusCode === 200) {
         expect(res.headers['content-type']).toBe('text/html; charset=utf-8');
-        expect(res.body).toContain('Mini-Vercel Artifact Gateway App');
+        expect(res.body).toContain('Doplo Artifact Gateway App');
       }
     });
 
@@ -1224,7 +1224,7 @@ describe('Fastify REST API Integration Tests', () => {
 
       if (res.statusCode === 200) {
         expect(res.headers['content-type']).toBe('text/html; charset=utf-8');
-        expect(res.body).toContain('Mini-Vercel Artifact Gateway App');
+        expect(res.body).toContain('Doplo Artifact Gateway App');
       }
     });
   });
@@ -1258,7 +1258,7 @@ describe('Fastify REST API Integration Tests', () => {
           commitHash: '1111111111111111111111111111111111111111',
           branch: 'main',
           s3Prefix: s3Prefix1,
-          previewUrl: `https://${prProject.slug}-1111111.mini-vercel.app`,
+          previewUrl: `https://${prProject.slug}-1111111.doplo.app`,
         },
       });
 
@@ -1272,7 +1272,7 @@ describe('Fastify REST API Integration Tests', () => {
           commitHash: '2222222222222222222222222222222222222222',
           branch: 'main',
           s3Prefix: s3Prefix2,
-          previewUrl: `https://${prProject.slug}-2222222.mini-vercel.app`,
+          previewUrl: `https://${prProject.slug}-2222222.doplo.app`,
         },
       });
 

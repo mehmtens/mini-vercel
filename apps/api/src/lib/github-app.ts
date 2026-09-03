@@ -1,5 +1,5 @@
-import { prisma } from '@mini-vercel/database';
-import { config } from '@mini-vercel/config';
+import { prisma } from '@doplo/database';
+import { config } from '@doplo/config';
 
 export interface GitHubAppRepoPayload {
   id: number | bigint;

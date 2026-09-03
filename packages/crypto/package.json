@@ -1,5 +1,5 @@
 {
-  "name": "@mini-vercel/crypto",
+  "name": "@doplo/crypto",
   "version": "1.0.0",
   "private": true,
   "main": "./dist/index.js",

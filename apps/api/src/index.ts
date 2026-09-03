@@ -7,8 +7,8 @@ import sensible from '@fastify/sensible';
 import cookie from '@fastify/cookie';
 import rawBody from 'fastify-raw-body';
 import crypto from 'crypto';
-import { config, validateProductionSecrets } from '@mini-vercel/config';
-import { prisma } from '@mini-vercel/database';
+import { config, validateProductionSecrets } from '@doplo/config';
+import { prisma } from '@doplo/database';
 import { ensureBucketExists } from './lib/minio';
 import { registerHealthRoutes } from './routes/health';
 import { registerAuthRoutes } from './routes/auth';
@@ -271,7 +271,7 @@ async function start() {
 
   try {
     await app.listen({ port: config.api.port, host: config.api.host });
-    app.log.info(`Mini-Vercel Fastify API listening at http://${config.api.host}:${config.api.port}`);
+    app.log.info(`Doplo Fastify API listening at http://${config.api.host}:${config.api.port}`);
   } catch (err) {
     app.log.error(err);
     process.exit(1);

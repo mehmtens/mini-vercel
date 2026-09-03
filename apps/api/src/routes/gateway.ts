@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import path from 'path';
-import { prisma } from '@mini-vercel/database';
-import { config } from '@mini-vercel/config';
+import { prisma } from '@doplo/database';
+import { config } from '@doplo/config';
 import { minioClient } from '../lib/minio.js';
 
 export function getMimeType(filePath: string): string {

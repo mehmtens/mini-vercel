@@ -2,12 +2,12 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { Client } from 'pg';
-import { config } from '@mini-vercel/config';
+import { config } from '@doplo/config';
 
 async function main() {
   const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
   const sourceUrl = new URL(config.db.url);
-  const testDatabase = 'mini_vercel_test';
+  const testDatabase = 'doplo_test';
 
   if (!sourceUrl.protocol.startsWith('postgres')) {
     throw new Error('Test database preparation requires a PostgreSQL DATABASE_URL.');

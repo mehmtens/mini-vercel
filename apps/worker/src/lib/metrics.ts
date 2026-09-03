@@ -2,10 +2,10 @@ import { Registry, collectDefaultMetrics, Counter, Histogram, Gauge } from 'prom
 
 export const workerRegister = new Registry();
 
-collectDefaultMetrics({ register: workerRegister, prefix: 'mini_vercel_worker_' });
+collectDefaultMetrics({ register: workerRegister, prefix: 'doplo_worker_' });
 
 export const workerBuildDuration = new Histogram({
-  name: 'mini_vercel_worker_build_duration_seconds',
+  name: 'doplo_worker_build_duration_seconds',
   help: 'Total build execution duration in worker process',
   labelNames: ['status', 'framework'],
   buckets: [1, 5, 10, 20, 30, 60, 120, 300, 600],
@@ -13,27 +13,27 @@ export const workerBuildDuration = new Histogram({
 });
 
 export const workerDeploymentsCounter = new Counter({
-  name: 'mini_vercel_worker_deployments_total',
+  name: 'doplo_worker_deployments_total',
   help: 'Total number of deployments processed by worker',
   labelNames: ['status'],
   registers: [workerRegister],
 });
 
 export const workerActiveJobsGauge = new Gauge({
-  name: 'mini_vercel_worker_active_jobs_gauge',
+  name: 'doplo_worker_active_jobs_gauge',
   help: 'Number of active deployment build jobs currently executing',
   registers: [workerRegister],
 });
 
 export const workerQueueWaitDuration = new Histogram({
-  name: 'mini_vercel_worker_queue_wait_duration_seconds',
+  name: 'doplo_worker_queue_wait_duration_seconds',
   help: 'Time spent in BullMQ queue before worker execution began',
   buckets: [0.1, 0.5, 1, 2, 5, 10, 30, 60, 120],
   registers: [workerRegister],
 });
 
 export const workerCleanupErrorsCounter = new Counter({
-  name: 'mini_vercel_worker_cleanup_errors_total',
+  name: 'doplo_worker_cleanup_errors_total',
   help: 'Total number of errors encountered during cleanup tasks in worker',
   labelNames: ['component'],
   registers: [workerRegister],

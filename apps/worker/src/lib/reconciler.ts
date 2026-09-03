@@ -1,7 +1,7 @@
 import Redis from 'ioredis';
 import { Queue } from 'bullmq';
-import { prisma, DeploymentStatus, LogStream, transitionDeploymentState } from '@mini-vercel/database';
-import { config } from '@mini-vercel/config';
+import { prisma, DeploymentStatus, LogStream, transitionDeploymentState } from '@doplo/database';
+import { config } from '@doplo/config';
 import crypto from 'crypto';
 
 export interface ReconciliationResult {

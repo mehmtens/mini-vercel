@@ -1,5 +1,5 @@
 {
-  "name": "@mini-vercel/database",
+  "name": "@doplo/database",
   "version": "1.0.0",
   "private": true,
   "main": "./dist/index.js",
@@ -37,8 +37,8 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@mini-vercel/config": "workspace:*",
-    "@mini-vercel/types": "workspace:*",
+    "@doplo/config": "workspace:*",
+    "@doplo/types": "workspace:*",
     "@prisma/client": "^5.22.0",
     "pg": "^8.13.1"
   },

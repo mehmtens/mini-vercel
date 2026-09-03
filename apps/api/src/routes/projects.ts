@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { prisma, EnvTarget } from '@mini-vercel/database';
-import { encrypt, decrypt } from '@mini-vercel/crypto';
-import { config } from '@mini-vercel/config';
+import { prisma, EnvTarget } from '@doplo/database';
+import { encrypt, decrypt } from '@doplo/crypto';
+import { config } from '@doplo/config';
 import { validateSlug, slugify } from '../lib/slug';
 import { authenticateRequest } from '../lib/auth';
 

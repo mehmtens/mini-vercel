@@ -11,10 +11,10 @@ COPY --chown=node:node pnpm-lock.yaml* pnpm-workspace.yaml package.json turbo.js
 COPY --chown=node:node packages/ ./packages/
 COPY --chown=node:node apps/api/ ./apps/api/
 
-RUN pnpm install --filter @mini-vercel/api...
-RUN pnpm --filter @mini-vercel/database generate
-RUN pnpm --filter "@mini-vercel/api^..." build
-RUN pnpm --filter @mini-vercel/api build
+RUN pnpm install --filter @doplo/api...
+RUN pnpm --filter @doplo/database generate
+RUN pnpm --filter "@doplo/api^..." build
+RUN pnpm --filter @doplo/api build
 
 # Security: Run application as unprivileged non-root user
 USER node

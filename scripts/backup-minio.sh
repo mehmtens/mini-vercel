@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Mini-Vercel MinIO / S3 Artifacts Automated Backup & Mirror Script
+# Doplo MinIO / S3 Artifacts Automated Backup & Mirror Script
 # Supports --dry-run for non-destructive pre-flight verification
 # ==============================================================================
 set -euo pipefail
 
-BACKUP_DIR="${MINIO_BACKUP_DIR:-/var/backups/mini-vercel/minio}"
-BUCKET_NAME="${MINIO_BUCKET_BUILDS:-mini-vercel-builds}"
+BACKUP_DIR="${MINIO_BACKUP_DIR:-/var/backups/doplo/minio}"
+BUCKET_NAME="${MINIO_BUCKET_BUILDS:-doplo-builds}"
 RETENTION_DAYS="${RETENTION_DAYS:-14}"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 TARGET_ARCHIVE="${BACKUP_DIR}/${BUCKET_NAME}_${TIMESTAMP}.tar.gz"
@@ -56,8 +56,8 @@ find "${BACKUP_DIR}" -type f -name "${BUCKET_NAME}_*.tar.gz*" -mtime "+${RETENTI
 # Export metric to Prometheus Node Exporter textfile collector
 METRICS_DIR="${METRICS_TEXTFILE_DIR:-/var/lib/node_exporter/textfile_collector}"
 if mkdir -p "${METRICS_DIR}" 2>/dev/null; then
-  echo "mini_vercel_backup_last_success_timestamp_seconds{target=\"minio\"} $(date +%s)" > "${METRICS_DIR}/mini_vercel_backup_minio.prom.$$" 2>/dev/null || true
-  mv "${METRICS_DIR}/mini_vercel_backup_minio.prom.$$" "${METRICS_DIR}/mini_vercel_backup_minio.prom" 2>/dev/null || true
+  echo "doplo_backup_last_success_timestamp_seconds{target=\"minio\"} $(date +%s)" > "${METRICS_DIR}/doplo_backup_minio.prom.$$" 2>/dev/null || true
+  mv "${METRICS_DIR}/doplo_backup_minio.prom.$$" "${METRICS_DIR}/doplo_backup_minio.prom" 2>/dev/null || true
 fi
 
 echo "[$(date -Iseconds)] [BACKUP] MinIO backup process finished and metrics recorded."

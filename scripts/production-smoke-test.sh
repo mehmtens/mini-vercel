@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# PulseOps Strict Production Smoke Test & Verification Suite
+# Doplo Strict Production Smoke Test & Verification Suite
 # ==============================================================================
 # Strict validation of:
 # 1. Compose syntax, environment constraints, and network isolation
@@ -18,7 +18,7 @@ TEST_ENV_FILE="deploy/production.env.example"
 API_URL="${API_URL:-http://localhost:8080}"
 
 echo "=============================================================================="
-echo " 🚀 PulseOps Strict Production Verification & Smoke Test Suite"
+echo " 🚀 Doplo Strict Production Verification & Smoke Test Suite"
 echo "=============================================================================="
 
 # ------------------------------------------------------------------------------
@@ -41,8 +41,8 @@ else
 fi
 
 echo -n "[SMOKE 1b/6] Verifying MinIO & Worker port isolation from public host... "
-MINIO_HOST_PORTS=$(grep -A 5 "mini_vercel_minio_prod" "${COMPOSE_FILE}" | grep -i "ports:" || true)
-WORKER_HOST_PORTS=$(grep -A 5 "mini_vercel_worker_prod" "${COMPOSE_FILE}" | grep -i "ports:" || true)
+MINIO_HOST_PORTS=$(grep -A 5 "doplo_minio_prod" "${COMPOSE_FILE}" | grep -i "ports:" || true)
+WORKER_HOST_PORTS=$(grep -A 5 "doplo_worker_prod" "${COMPOSE_FILE}" | grep -i "ports:" || true)
 
 if [ -z "${MINIO_HOST_PORTS}" ] && [ -z "${WORKER_HOST_PORTS}" ]; then
   echo "✅ PASSED (MinIO and Worker metrics are private to internal network)"

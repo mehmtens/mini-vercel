@@ -2,10 +2,10 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
-import { prisma, DeploymentStatus } from '@mini-vercel/database';
-import { config } from '@mini-vercel/config';
+import { prisma, DeploymentStatus } from '@doplo/database';
+import { config } from '@doplo/config';
 import { buildApp } from './index';
-import { redisConnection, processDeploymentJob } from '@mini-vercel/worker';
+import { redisConnection, processDeploymentJob } from '@doplo/worker';
 import { minioClient } from './lib/minio';
 import { FastifyInstance } from 'fastify';
 import { Worker as BullWorker, Queue } from 'bullmq';
@@ -49,7 +49,7 @@ describe('Real Vite End-to-End Pipeline (Webhook -> DB -> BullMQ -> Real Worker 
       data: {
         githubId: uniqueId,
         username: uniqueId,
-        email: `${uniqueId}@mini-vercel.local`,
+        email: `${uniqueId}@doplo.local`,
       },
     });
 
@@ -59,7 +59,7 @@ describe('Real Vite End-to-End Pipeline (Webhook -> DB -> BullMQ -> Real Worker 
         userId: testUser.id,
         name: slug,
         slug: slug,
-        repoName: `mini-vercel/${slug}`,
+        repoName: `doplo/${slug}`,
         repoUrl: `file://${fixturePath.replace(/\\/g, '/')}`,
         branch: 'main',
         buildCommand: 'npm run build',
@@ -198,7 +198,7 @@ describe('Real Vite End-to-End Pipeline (Webhook -> DB -> BullMQ -> Real Worker 
 
     expect(gatewayHtmlRes.statusCode).toBe(200);
     expect(gatewayHtmlRes.headers['content-type']).toContain('text/html');
-    expect(gatewayHtmlRes.payload).toContain('<h1>Mini Vercel Live Vite Fixture</h1>');
+    expect(gatewayHtmlRes.payload).toContain('<h1>Doplo Live Vite Fixture</h1>');
 
     // -------------------------------------------------------------------------
     // STEP 5: Resolve Fingerprinted Vite Asset or Entry Script from HTML

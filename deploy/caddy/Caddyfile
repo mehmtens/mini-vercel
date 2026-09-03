@@ -1,5 +1,5 @@
 # ==============================================================================
-# Mini-Vercel Caddy Dynamic Reverse Proxy & Edge Router
+# Doplo Caddy Dynamic Reverse Proxy & Edge Router
 # ==============================================================================
 {
 	admin off

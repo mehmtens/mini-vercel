@@ -15,9 +15,9 @@ COPY --chown=node:node pnpm-lock.yaml* pnpm-workspace.yaml package.json turbo.js
 COPY --chown=node:node packages/ ./packages/
 COPY --chown=node:node apps/web/ ./apps/web/
 
-RUN pnpm install --filter @mini-vercel/web...
-RUN pnpm --filter "@mini-vercel/web^..." build
-RUN pnpm --filter @mini-vercel/web build
+RUN pnpm install --filter @doplo/web...
+RUN pnpm --filter "@doplo/web^..." build
+RUN pnpm --filter @doplo/web build
 
 # Security: Run application as unprivileged non-root user
 USER node

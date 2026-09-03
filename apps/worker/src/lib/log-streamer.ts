@@ -1,5 +1,5 @@
 import Redis from 'ioredis';
-import { prisma, LogStream } from '@mini-vercel/database';
+import { prisma, LogStream } from '@doplo/database';
 import { logSanitizer, LogSanitizer } from './log-sanitizer.js';
 
 export interface BufferedLogItem {

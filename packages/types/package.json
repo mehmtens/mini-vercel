@@ -1,5 +1,5 @@
 {
-  "name": "@mini-vercel/types",
+  "name": "@doplo/types",
   "version": "1.0.0",
   "private": true,
   "main": "./dist/index.js",
@@ -17,7 +17,7 @@
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "test": "echo \"@mini-vercel/types: types validated\"",
+    "test": "echo \"@doplo/types: types validated\"",
     "clean": "rimraf dist"
   },
   "devDependencies": {

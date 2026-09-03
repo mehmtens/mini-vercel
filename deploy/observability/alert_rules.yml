@@ -1,18 +1,18 @@
 # ==============================================================================
-# Prometheus Alerting Rules for Mini-Vercel
+# Prometheus Alerting Rules for Doplo
 # ==============================================================================
 groups:
-  - name: mini_vercel_alerts
+  - name: doplo_alerts
     rules:
-      # 1. Dependency Outage Alert (Uses internal Application Gauge mini_vercel_dependency_up_gauge)
+      # 1. Dependency Outage Alert (Uses internal Application Gauge doplo_dependency_up_gauge)
       - alert: DependencyUnhealthy
-        expr: mini_vercel_dependency_up_gauge == 0
+        expr: doplo_dependency_up_gauge == 0
         for: 1m
         labels:
           severity: critical
         annotations:
           summary: "Core dependency {{ $labels.dependency }} is DOWN"
-          description: "Mini-Vercel /health/ready check detected that {{ $labels.dependency }} has been unavailable for more than 1 minute."
+          description: "Doplo /health/ready check detected that {{ $labels.dependency }} has been unavailable for more than 1 minute."
 
       # 2. High HTTP 5xx Error Rate
       - alert: HighErrorRate
@@ -26,7 +26,7 @@ groups:
 
       # 3. Queue Backlog Stall / Worker Starvation
       - alert: QueueBacklogStall
-        expr: mini_vercel_queue_waiting_jobs_gauge > 10
+        expr: doplo_queue_waiting_jobs_gauge > 10
         for: 5m
         labels:
           severity: warning
@@ -36,7 +36,7 @@ groups:
 
       # 4. Slow Build Execution Duration (p95 > 5 minutes)
       - alert: SlowBuildDuration
-        expr: histogram_quantile(0.95, sum(rate(mini_vercel_build_duration_seconds_bucket[10m])) by (le)) > 300
+        expr: histogram_quantile(0.95, sum(rate(doplo_build_duration_seconds_bucket[10m])) by (le)) > 300
         for: 5m
         labels:
           severity: warning
@@ -56,7 +56,7 @@ groups:
 
       # 6. Stale Database / S3 Backup Alert (> 24 hours without successful backup)
       - alert: BackupStale
-        expr: (time() - mini_vercel_backup_last_success_timestamp_seconds) > 86400
+        expr: (time() - doplo_backup_last_success_timestamp_seconds) > 86400
         for: 10m
         labels:
           severity: critical
@@ -66,7 +66,7 @@ groups:
 
       # 7. Cleanup Job Errors
       - alert: CleanupErrorsDetected
-        expr: increase(mini_vercel_cleanup_errors_total[1h]) > 0
+        expr: increase(doplo_cleanup_errors_total[1h]) > 0
         for: 5m
         labels:
           severity: warning

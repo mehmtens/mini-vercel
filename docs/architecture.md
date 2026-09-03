@@ -1,6 +1,6 @@
-# 🏛️ PulseOps Sistem Mimarisi
+# 🏛️ Doplo Sistem Mimarisi
 
-Bu doküman, **PulseOps** bulut dağıtım platformunun sistem mimarisini, bileşenler arası veri akışını, kuyruk yönetimini, depolama stratejisini ve ters vekil sunucu yapılandırmasını açıklar.
+Bu doküman, **Doplo** bulut dağıtım platformunun sistem mimarisini, bileşenler arası veri akışını, kuyruk yönetimini, depolama stratejisini ve ters vekil sunucu yapılandırmasını açıklar.
 
 ---
 
@@ -52,7 +52,7 @@ graph TD
   - `deployment-queue` kuyruğunu dinler.
   - Dağıtım aşamalarını (Git Clone -> Bağımlılık Çözümü -> Derleme/Paketleme -> Statik Optimizasyon -> MinIO Yüklemesi -> Edge Dağıtım) adım adım çalıştırır.
   - Her adımı ve süresini gerçek zamanlı log olarak PostgreSQL'e yazar.
-  - Başarılı derleme sonrası artefaktları MinIO bucket'ına (`mini-vercel-builds`) yükler ve önizleme URL'ini (`preview_url`) üretir.
+  - Başarılı derleme sonrası artefaktları MinIO bucket'ına (`doplo-builds`) yükler ve önizleme URL'ini (`preview_url`) üretir.
   - Zarif kapanma (Graceful shutdown) ile mevcut işlerin güvenle tamamlanmasını sağlar.
 
 ### 2.3. `apps/web` (Next.js Dashboard)
@@ -107,6 +107,6 @@ graph TD
 
 ## 4. Güvenlik ve Dayanıklılık
 - **Tip Güvenliği**: TypeScript ve `packages/types` ile uçtan uca tip güvenliği.
-- **İzolasyon**: Docker ağları (`mini_vercel_network`) ile güvenli iç haberleşme.
+- **İzolasyon**: Docker ağları (`doplo_network`) ile güvenli iç haberleşme.
 - **Sağlık Kontrolleri (Health Checks)**: Hem Docker Compose düzeyinde hem de Fastify `/health` endpoint'inde periyodik doğrulama.
 - **Hata Toleransı**: BullMQ otomatik yeniden deneme (retry) ve hata yakalama mekanizmaları.

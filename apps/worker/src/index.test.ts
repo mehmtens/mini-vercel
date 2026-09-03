@@ -5,9 +5,9 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import stream from 'stream';
-import { config } from '@mini-vercel/config';
-import { prisma, DeploymentStatus, EnvTarget } from '@mini-vercel/database';
-import { encrypt } from '@mini-vercel/crypto';
+import { config } from '@doplo/config';
+import { prisma, DeploymentStatus, EnvTarget } from '@doplo/database';
+import { encrypt } from '@doplo/crypto';
 import {
   processDeploymentJob,
   checkWorkerHealth,
@@ -48,12 +48,12 @@ import {
   UploadFailedError,
 } from './lib/artifact-pipeline.js';
 import { logSanitizer, LogSanitizer } from './lib/log-sanitizer.js';
-import { DeploymentJobPayload } from '@mini-vercel/types';
+import { DeploymentJobPayload } from '@doplo/types';
 
-describe('@mini-vercel/worker Unit & Integration Tests', () => {
+describe('@doplo/worker Unit & Integration Tests', () => {
   const testRunId = `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   const testGithubId = `gh_worker_${testRunId}`;
-  const testEmail = `worker_${testRunId}@mini-vercel.local`;
+  const testEmail = `worker_${testRunId}@doplo.local`;
   const testSlug = `worker-test-${testRunId}`;
   const VALID_40_CHAR_SHA = '0123456789abcdef0123456789abcdef01234567';
   let testUserId: string;
@@ -75,8 +75,8 @@ describe('@mini-vercel/worker Unit & Integration Tests', () => {
         userId: testUserId,
         name: `Worker Test Project ${testRunId}`,
         slug: testSlug,
-        repoName: `mini-vercel/${testSlug}`,
-        repoUrl: `https://github.com/mini-vercel/${testSlug}`,
+        repoName: `doplo/${testSlug}`,
+        repoUrl: `https://github.com/doplo/${testSlug}`,
         branch: 'main',
         buildCommand: 'npm run build',
         outputDirectory: 'dist',
@@ -306,7 +306,7 @@ describe('@mini-vercel/worker Unit & Integration Tests', () => {
       );
       fs.writeFileSync(
         path.join(assetsDir, 'main-c8b1a2.js'),
-        'console.log("Mini-Vercel Vite Production Bundle");'
+        'console.log("Doplo Vite Production Bundle");'
       );
       fs.writeFileSync(
         path.join(assetsDir, 'style-d4e5f6.css'),
@@ -501,7 +501,7 @@ describe('@mini-vercel/worker Unit & Integration Tests', () => {
 
         await expect(
           gitCloner.clone({
-            repoUrl: 'https://github.com/mini-vercel/oversized',
+            repoUrl: 'https://github.com/doplo/oversized',
             commitHash: VALID_40_CHAR_SHA,
             targetDir: tempDir,
             maxSizeBytes: 1024,
@@ -612,7 +612,7 @@ describe('@mini-vercel/worker Unit & Integration Tests', () => {
           offlineRunner.runBuild({
             deploymentId: crypto.randomUUID(),
             projectName: 'offline-test',
-            repoUrl: 'https://github.com/mini-vercel/app',
+            repoUrl: 'https://github.com/doplo/app',
             branch: 'main',
             commitHash: VALID_40_CHAR_SHA,
             onLog: () => {},
@@ -656,7 +656,7 @@ describe('@mini-vercel/worker Unit & Integration Tests', () => {
           customRunner.runBuild({
             deploymentId: crypto.randomUUID(),
             projectName: 'disk-test',
-            repoUrl: 'https://github.com/mini-vercel/app',
+            repoUrl: 'https://github.com/doplo/app',
             branch: 'main',
             commitHash: VALID_40_CHAR_SHA,
             workspaceDir: tempDir,
@@ -700,7 +700,7 @@ describe('@mini-vercel/worker Unit & Integration Tests', () => {
           customRunner.runBuild({
             deploymentId: crypto.randomUUID(),
             projectName: 'timeout-test',
-            repoUrl: 'https://github.com/mini-vercel/app',
+            repoUrl: 'https://github.com/doplo/app',
             branch: 'main',
             commitHash: VALID_40_CHAR_SHA,
             workspaceDir: tempDir,
@@ -741,7 +741,7 @@ describe('@mini-vercel/worker Unit & Integration Tests', () => {
           customRunner.runBuild({
             deploymentId: crypto.randomUUID(),
             projectName: 'oom-test',
-            repoUrl: 'https://github.com/mini-vercel/app',
+            repoUrl: 'https://github.com/doplo/app',
             branch: 'main',
             commitHash: VALID_40_CHAR_SHA,
             workspaceDir: tempDir,
@@ -889,7 +889,7 @@ describe('@mini-vercel/worker Unit & Integration Tests', () => {
       const invalidShaPayload: DeploymentJobPayload = {
         deployment_id: crypto.randomUUID(),
         project_name: 'test-invalid-sha',
-        repo_url: 'https://github.com/mini-vercel/app',
+        repo_url: 'https://github.com/doplo/app',
         branch: 'main',
         commit_hash: 'not-40-hex-chars',
         created_at: new Date().toISOString(),
@@ -902,7 +902,7 @@ describe('@mini-vercel/worker Unit & Integration Tests', () => {
       const missingIdPayload = {
         deployment_id: '',
         project_name: 'test-no-id',
-        repo_url: 'https://github.com/mini-vercel/app',
+        repo_url: 'https://github.com/doplo/app',
         branch: 'main',
         commit_hash: VALID_40_CHAR_SHA,
         created_at: new Date().toISOString(),
@@ -930,7 +930,7 @@ describe('@mini-vercel/worker Unit & Integration Tests', () => {
       const payload: DeploymentJobPayload = {
         deployment_id: deployment.id,
         project_name: testSlug,
-        repo_url: `https://github.com/mini-vercel/${testSlug}`,
+        repo_url: `https://github.com/doplo/${testSlug}`,
         branch: 'main',
         commit_hash: VALID_40_CHAR_SHA,
         build_command: 'npm run build',
@@ -985,7 +985,7 @@ describe('@mini-vercel/worker Unit & Integration Tests', () => {
       const payload: DeploymentJobPayload = {
         deployment_id: readyDeployment.id,
         project_name: testSlug,
-        repo_url: `https://github.com/mini-vercel/${testSlug}`,
+        repo_url: `https://github.com/doplo/${testSlug}`,
         branch: 'main',
         commit_hash: VALID_40_CHAR_SHA,
         created_at: new Date().toISOString(),
@@ -1013,7 +1013,7 @@ describe('@mini-vercel/worker Unit & Integration Tests', () => {
       const payload: DeploymentJobPayload = {
         deployment_id: cancelledDeployment.id,
         project_name: testSlug,
-        repo_url: `https://github.com/mini-vercel/${testSlug}`,
+        repo_url: `https://github.com/doplo/${testSlug}`,
         branch: 'main',
         commit_hash: VALID_40_CHAR_SHA,
         created_at: new Date().toISOString(),

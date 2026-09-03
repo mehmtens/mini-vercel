@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Mini-Vercel PostgreSQL Disaster Recovery & Restore Script
+# Doplo PostgreSQL Disaster Recovery & Restore Script
 # ==============================================================================
 set -euo pipefail
 
@@ -25,14 +25,14 @@ else
     echo "[$(date -Iseconds)] [WARN] No .sha256 checksum file found. Proceeding with caution..."
 fi
 
-echo "[$(date -Iseconds)] [RESTORE] Restoring database '${POSTGRES_DB:-mini_vercel}' from '${BACKUP_FILE}'..."
+echo "[$(date -Iseconds)] [RESTORE] Restoring database '${POSTGRES_DB:-doplo}' from '${BACKUP_FILE}'..."
 
 PGPASSWORD="${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}" \
 gunzip -c "${BACKUP_FILE}" | \
 psql -h "${POSTGRES_HOST:-localhost}" \
      -p "${POSTGRES_PORT:-5432}" \
      -U "${POSTGRES_USER:-postgres}" \
-     -d "${POSTGRES_DB:-mini_vercel}" \
+     -d "${POSTGRES_DB:-doplo}" \
      --single-transaction
 
 echo "[$(date -Iseconds)] [RESTORE] Database restored successfully."

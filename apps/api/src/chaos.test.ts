@@ -2,8 +2,8 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import crypto from 'crypto';
 import { buildApp } from './index';
-import { prisma, DeploymentStatus } from '@mini-vercel/database';
-import { config } from '@mini-vercel/config';
+import { prisma, DeploymentStatus } from '@doplo/database';
+import { config } from '@doplo/config';
 import { minioClient } from './lib/minio';
 
 describe('Chaos & Resilience Test Suite', () => {
@@ -21,7 +21,7 @@ describe('Chaos & Resilience Test Suite', () => {
       create: {
         githubId: 'gh_chaos_tester',
         username: 'chaos_tester',
-        email: 'chaos_tester@mini-vercel.local',
+        email: 'chaos_tester@doplo.local',
       },
     });
 
@@ -31,8 +31,8 @@ describe('Chaos & Resilience Test Suite', () => {
         userId: testUser.id,
         name: slug,
         slug: slug,
-        repoName: `mini-vercel/${slug}`,
-        repoUrl: `https://github.com/mini-vercel/${slug}`,
+        repoName: `doplo/${slug}`,
+        repoUrl: `https://github.com/doplo/${slug}`,
       },
     });
   });
@@ -197,7 +197,7 @@ describe('Chaos & Resilience Test Suite', () => {
     expect(res.statusCode).toBe(200);
     expect(res.headers['content-type']).toContain('text/plain');
     expect(res.payload).toContain('http_requests_total');
-    expect(res.payload).toContain('mini_vercel_');
+    expect(res.payload).toContain('doplo_');
   });
 
   it('5. Dependency Outage Resilience: /health/ready accurately reports component status', async () => {

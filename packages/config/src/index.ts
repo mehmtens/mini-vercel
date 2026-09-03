@@ -134,12 +134,12 @@ export const config: AppConfig = {
     allowedOrigins: parsedAllowedOrigins,
   },
   db: {
-    url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/mini_vercel',
+    url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/doplo',
     host: process.env.POSTGRES_HOST || 'localhost',
     port: Number(process.env.POSTGRES_PORT || 5432),
     user: process.env.POSTGRES_USER || 'postgres',
     pass: process.env.POSTGRES_PASSWORD || 'postgres',
-    name: process.env.POSTGRES_DB || 'mini_vercel',
+    name: process.env.POSTGRES_DB || 'doplo',
   },
   redis: {
     url: process.env.REDIS_URL || 'redis://localhost:6379',
@@ -153,7 +153,7 @@ export const config: AppConfig = {
     useSSL: process.env.MINIO_USE_SSL === 'true',
     accessKey: process.env.MINIO_ACCESS_KEY || 'minioadmin',
     secretKey: process.env.MINIO_SECRET_KEY || 'minioadmin',
-    bucketBuilds: process.env.MINIO_BUCKET_BUILDS || 'mini-vercel-builds',
+    bucketBuilds: process.env.MINIO_BUCKET_BUILDS || 'doplo-builds',
     region: process.env.MINIO_REGION || 'us-east-1',
   },
   queue: {
@@ -183,7 +183,7 @@ export const config: AppConfig = {
   },
   telemetry: {
     enabled: process.env.OTEL_SDK_DISABLED !== 'true',
-    serviceName: process.env.OTEL_SERVICE_NAME || 'mini-vercel',
+    serviceName: process.env.OTEL_SERVICE_NAME || 'doplo',
     otlpEndpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318',
   },
 };

@@ -1,5 +1,5 @@
 import * as Minio from 'minio';
-import { config } from '@mini-vercel/config';
+import { config } from '@doplo/config';
 
 export const minioClient = new Minio.Client({
   endPoint: config.minio.endpoint,

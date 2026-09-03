@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import path from 'path';
 import fs from 'fs';
-import { prisma } from '@mini-vercel/database';
+import { prisma } from '@doplo/database';
 import { BuildPlanner } from './lib/build-planner';
 import { artifactPipeline } from './lib/artifact-pipeline';
 import { cleanupService } from './lib/cleanup-service';
@@ -20,7 +20,7 @@ describe('Vite Fixture Build Planning & Artifact Pipeline Integration', () => {
       create: {
         githubId: 'e2e_vite_tester',
         username: 'vite_tester',
-        email: 'vite_tester@mini-vercel.local',
+        email: 'vite_tester@doplo.local',
       },
     });
 
@@ -30,8 +30,8 @@ describe('Vite Fixture Build Planning & Artifact Pipeline Integration', () => {
         userId: testUser.id,
         name: slug,
         slug: slug,
-        repoName: 'mini-vercel/sample-vite-app',
-        repoUrl: 'https://github.com/mini-vercel/sample-vite-app',
+        repoName: 'doplo/sample-vite-app',
+        repoUrl: 'https://github.com/doplo/sample-vite-app',
       },
     });
 

@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { prisma, User } from '@mini-vercel/database';
-import { config } from '@mini-vercel/config';
+import { prisma, User } from '@doplo/database';
+import { config } from '@doplo/config';
 import { getSession } from './session';
 
 export interface AuthenticatedUser {
@@ -99,7 +99,7 @@ export async function authenticateRequest(
             data: {
               githubId: isUuid ? `gh_${token.slice(0, 8)}` : `gh_${token}`,
               username: isUuid ? `user_${token.slice(0, 8)}` : token,
-              email: isUuid ? `${token.slice(0, 8)}@mini-vercel.local` : `${token}@mini-vercel.local`,
+              email: isUuid ? `${token.slice(0, 8)}@doplo.local` : `${token}@doplo.local`,
             },
           });
         } catch {

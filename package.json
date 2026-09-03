@@ -1,8 +1,8 @@
 {
-  "name": "mini-vercel-monorepo",
+  "name": "doplo-monorepo",
   "version": "1.0.0",
   "private": true,
-  "description": "PulseOps deployment platform: Fastify API, Next.js Web, BullMQ Worker, PostgreSQL, Redis, MinIO, Caddy",
+  "description": "Doplo deployment platform: Fastify API, Next.js Web, BullMQ Worker, PostgreSQL, Redis, MinIO, Caddy",
   "packageManager": "pnpm@11.22.0",
   "engines": {
     "node": ">=22.13.0 <23",
@@ -13,9 +13,9 @@
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "pretest": "pnpm --filter @mini-vercel/database test:prepare",
+    "pretest": "pnpm --filter @doplo/database test:prepare",
     "test": "node scripts/run-tests.mjs",
-    "posttest": "pnpm --filter @mini-vercel/database test:cleanup",
+    "posttest": "pnpm --filter @doplo/database test:cleanup",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "clean": "turbo run clean",

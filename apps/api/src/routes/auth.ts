@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 import crypto from 'crypto';
-import { config } from '@mini-vercel/config';
-import { prisma } from '@mini-vercel/database';
+import { config } from '@doplo/config';
+import { prisma } from '@doplo/database';
 import { authenticateRequest } from '../lib/auth';
 import { createSession, destroySession, storeUserGitHubToken } from '../lib/session';
 
@@ -168,7 +168,7 @@ export async function registerAuthRoutes(app: FastifyInstance) {
     if (config.env === 'test' || code.startsWith('mock_code_')) {
       githubUserId = 'gh_mock_12345';
       githubUsername = 'github_test_user';
-      githubEmail = 'github_test_user@mini-vercel.local';
+      githubEmail = 'github_test_user@doplo.local';
       avatarUrl = 'https://avatars.githubusercontent.com/u/12345';
       accessToken = `gho_mock_token_${crypto.randomBytes(16).toString('hex')}`;
     } else {
@@ -203,7 +203,7 @@ export async function registerAuthRoutes(app: FastifyInstance) {
         const userRes = await fetch('https://api.github.com/user', {
           headers: {
             Authorization: `Bearer ${accessToken}`,
-            'User-Agent': 'mini-vercel-app',
+            'User-Agent': 'doplo-app',
             Accept: 'application/vnd.github.v3+json',
           },
         });
@@ -227,7 +227,7 @@ export async function registerAuthRoutes(app: FastifyInstance) {
           const emailsRes = await fetch('https://api.github.com/user/emails', {
             headers: {
               Authorization: `Bearer ${accessToken}`,
-              'User-Agent': 'mini-vercel-app',
+              'User-Agent': 'doplo-app',
               Accept: 'application/vnd.github.v3+json',
             },
           });

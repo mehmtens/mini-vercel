@@ -1,28 +1,30 @@
+name: doplo
+
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: mini_vercel_postgres
+    container_name: doplo_postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-mini_vercel}
+      POSTGRES_DB: ${POSTGRES_DB:-doplo}
     ports:
       - "${POSTGRES_PORT:-5435}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./migrations/000001_init_schema.up.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-mini_vercel}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-doplo}"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
-      - mini_vercel_network
+      - doplo_network
 
   redis:
     image: redis:7-alpine
-    container_name: mini_vercel_redis
+    container_name: doplo_redis
     restart: unless-stopped
     command: redis-server --appendonly yes
     ports:
@@ -35,11 +37,11 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - mini_vercel_network
+      - doplo_network
 
   minio:
     image: minio/minio:latest
-    container_name: mini_vercel_minio
+    container_name: doplo_minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -56,41 +58,41 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - mini_vercel_network
+      - doplo_network
 
   minio-init:
     image: minio/mc:latest
-    container_name: mini_vercel_minio_init
+    container_name: doplo_minio_init
     depends_on:
       minio:
         condition: service_healthy
     entrypoint: >
       /bin/sh -c "
       mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin};
-      mc mb --ignore-existing local/${MINIO_BUCKET_BUILDS:-mini-vercel-builds};
+      mc mb --ignore-existing local/${MINIO_BUCKET_BUILDS:-doplo-builds};
       exit 0;
       "
     networks:
-      - mini_vercel_network
+      - doplo_network
 
   api:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
-    container_name: mini_vercel_api
+    container_name: doplo_api
     restart: unless-stopped
     environment:
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV:-development}
       API_PORT: 8080
       API_HOST: 0.0.0.0
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-mini_vercel}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-doplo}
       REDIS_URL: redis://redis:6379
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
       MINIO_USE_SSL: "false"
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
-      MINIO_BUCKET_BUILDS: ${MINIO_BUCKET_BUILDS:-mini-vercel-builds}
+      MINIO_BUCKET_BUILDS: ${MINIO_BUCKET_BUILDS:-doplo-builds}
       QUEUE_NAME: ${QUEUE_NAME:-deployment-queue}
       GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET:-dev_webhook_secret_key_12345}
       CRYPTO_MASTER_KEY: ${CRYPTO_MASTER_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
@@ -102,29 +104,31 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - mini_vercel_network
+      - doplo_network
 
   worker:
     build:
       context: .
       dockerfile: apps/worker/Dockerfile
-    container_name: mini_vercel_worker
+    container_name: doplo_worker
     restart: unless-stopped
     environment:
-      NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-mini_vercel}
+      NODE_ENV: ${NODE_ENV:-development}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-doplo}
       REDIS_URL: redis://redis:6379
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
       MINIO_USE_SSL: "false"
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
-      MINIO_BUCKET_BUILDS: ${MINIO_BUCKET_BUILDS:-mini-vercel-builds}
+      MINIO_BUCKET_BUILDS: ${MINIO_BUCKET_BUILDS:-doplo-builds}
       QUEUE_NAME: ${QUEUE_NAME:-deployment-queue}
       QUEUE_CONCURRENCY: ${QUEUE_CONCURRENCY:-5}
       CRYPTO_MASTER_KEY: ${CRYPTO_MASTER_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    group_add:
+      - "${DOCKER_GID:-0}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -133,13 +137,13 @@ services:
       minio-init:
         condition: service_completed_successfully
     networks:
-      - mini_vercel_network
+      - doplo_network
 
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
-    container_name: mini_vercel_web
+    container_name: doplo_web
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -149,11 +153,11 @@ services:
     depends_on:
       - api
     networks:
-      - mini_vercel_network
+      - doplo_network
 
   caddy:
     image: caddy:2-alpine
-    container_name: mini_vercel_caddy
+    container_name: doplo_caddy
     restart: unless-stopped
     ports:
       - "${CADDY_HTTP_PORT:-80}:80"
@@ -167,21 +171,21 @@ services:
       - web
       - minio
     networks:
-      - mini_vercel_network
+      - doplo_network
 
 volumes:
   postgres_data:
-    name: mini_vercel_postgres_data
+    name: doplo_postgres_data
   redis_data:
-    name: mini_vercel_redis_data
+    name: doplo_redis_data
   minio_data:
-    name: mini_vercel_minio_data
+    name: doplo_minio_data
   caddy_data:
-    name: mini_vercel_caddy_data
+    name: doplo_caddy_data
   caddy_config:
-    name: mini_vercel_caddy_config
+    name: doplo_caddy_config
 
 networks:
-  mini_vercel_network:
-    name: mini_vercel_network
+  doplo_network:
+    name: doplo_network
     driver: bridge

@@ -1,5 +1,5 @@
 {
-  "name": "@mini-vercel/worker",
+  "name": "@doplo/worker",
   "version": "1.0.0",
   "private": true,
   "main": "./dist/index.js",
@@ -13,10 +13,10 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@mini-vercel/config": "workspace:*",
-    "@mini-vercel/crypto": "workspace:*",
-    "@mini-vercel/database": "workspace:*",
-    "@mini-vercel/types": "workspace:*",
+    "@doplo/config": "workspace:*",
+    "@doplo/crypto": "workspace:*",
+    "@doplo/database": "workspace:*",
+    "@doplo/types": "workspace:*",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/auto-instrumentations-node": "^0.80.0",
     "@opentelemetry/core": "2.11.0",

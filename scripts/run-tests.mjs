@@ -9,9 +9,9 @@ if (existsSync(envPath) && typeof process.loadEnvFile === 'function') {
 }
 
 const databaseUrl = new URL(
-  process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5435/mini_vercel'
+  process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5435/doplo'
 );
-databaseUrl.pathname = '/mini_vercel_test';
+databaseUrl.pathname = '/doplo_test';
 
 const pnpmCli = process.env.npm_execpath;
 if (!pnpmCli) throw new Error('pnpm executable path is unavailable.');

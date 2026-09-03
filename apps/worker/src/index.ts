@@ -5,16 +5,16 @@ import * as Minio from 'minio';
 import os from 'os';
 import path from 'path';
 import fs from 'fs';
-import { buildPreviewUrl, config } from '@mini-vercel/config';
+import { buildPreviewUrl, config } from '@doplo/config';
 import {
   prisma,
   DeploymentStatus,
   LogStream,
   transitionDeploymentState,
   isTerminalStatus,
-} from '@mini-vercel/database';
-import { decrypt } from '@mini-vercel/crypto';
-import { DeploymentJobPayload } from '@mini-vercel/types';
+} from '@doplo/database';
+import { decrypt } from '@doplo/crypto';
+import { DeploymentJobPayload } from '@doplo/types';
 import { dockerRunner, DockerUnavailableError, BuildTimeoutError, DiskQuotaExceededError } from './lib/docker-runner.js';
 import { gitCloner, GitCloner, InvalidCommitShaError, RepoSizeExceededError } from './lib/git-cloner.js';
 import { buildPlanner, InvalidOutputDirectoryError } from './lib/build-planner.js';
@@ -251,7 +251,7 @@ export async function processDeploymentJob(jobData: DeploymentJobPayload): Promi
   // Heartbeat interval to prevent reconciliation from marking active job as stale
   let heartbeatTimer: NodeJS.Timeout | null = null;
   const heartbeatKey = `deployment:heartbeat:${deployment_id}`;
-  const workspaceDir = path.join(os.tmpdir(), 'mini-vercel-builds', deployment_id);
+  const workspaceDir = path.join(os.tmpdir(), 'doplo-builds', deployment_id);
   let targetProjectId: string = project_name;
   let targetProjectSlug: string = project_name;
   let targetEnv: 'PRODUCTION' | 'PREVIEW' = 'PREVIEW';
@@ -548,7 +548,7 @@ export function createWorker(customConnection?: Redis): Worker<DeploymentJobPayl
 export { reconcileStaleDeployments } from './lib/reconciler';
 
 async function start() {
-  console.log(`[Worker] Starting Mini-Vercel BullMQ Worker...`);
+  console.log(`[Worker] Starting Doplo BullMQ Worker...`);
 
   const health = await checkWorkerHealth();
   console.log(

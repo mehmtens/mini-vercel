@@ -1,7 +1,7 @@
 import { Queue } from 'bullmq';
 import Redis from 'ioredis';
-import { config } from '@mini-vercel/config';
-import { DeploymentJobPayload } from '@mini-vercel/types';
+import { config } from '@doplo/config';
+import { DeploymentJobPayload } from '@doplo/types';
 
 export const redisConnection = new Redis(config.redis.url, {
   maxRetriesPerRequest: null,

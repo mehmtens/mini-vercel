@@ -117,7 +117,7 @@ test.describe('Platform Lifecycle & Deployment State Machine E2E', () => {
             id: 'proj-123',
             name: 'acme-web-app',
             slug: 'acme-web-app',
-            repoUrl: 'https://github.com/mini-vercel/acme-web-app',
+            repoUrl: 'https://github.com/doplo/acme-web-app',
             framework: 'nextjs',
             branch: 'main',
             currentDeploymentId: 'dep-prod-1',

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { prisma, DeploymentStatus } from '@mini-vercel/database';
+import { prisma, DeploymentStatus } from '@doplo/database';
 import { reconcileStaleDeployments, redisConnection, NonRetryableError, processDeploymentJob } from './index';
 import { Queue } from 'bullmq';
-import { config } from '@mini-vercel/config';
+import { config } from '@doplo/config';
 
 describe('Worker Chaos & Failure Resilience Test Suite', () => {
   let testUser: any;
@@ -18,7 +18,7 @@ describe('Worker Chaos & Failure Resilience Test Suite', () => {
       create: {
         githubId: 'chaos_worker_tester',
         username: 'chaos_worker_tester',
-        email: 'chaos_worker@mini-vercel.local',
+        email: 'chaos_worker@doplo.local',
       },
     });
 
@@ -28,8 +28,8 @@ describe('Worker Chaos & Failure Resilience Test Suite', () => {
         userId: testUser.id,
         name: slug,
         slug: slug,
-        repoName: `mini-vercel/${slug}`,
-        repoUrl: `https://github.com/mini-vercel/${slug}`,
+        repoName: `doplo/${slug}`,
+        repoUrl: `https://github.com/doplo/${slug}`,
       },
     });
   });
@@ -87,7 +87,7 @@ describe('Worker Chaos & Failure Resilience Test Suite', () => {
       processDeploymentJob({
         deployment_id: 'dep_bad_sha',
         project_name: testProject.name,
-        repo_url: 'https://github.com/mini-vercel/app',
+        repo_url: 'https://github.com/doplo/app',
         branch: 'main',
         commit_hash: 'not-a-valid-40-hex-sha',
         created_at: new Date().toISOString(),

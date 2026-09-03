@@ -1,9 +1,9 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { prisma, DeploymentStatus, DeploymentTrigger, LogStream, transitionDeploymentState } from '@mini-vercel/database';
-import { verifyGitHubWebhookSignature, generateCommitHash } from '@mini-vercel/crypto';
-import { buildPreviewUrl, config } from '@mini-vercel/config';
+import { prisma, DeploymentStatus, DeploymentTrigger, LogStream, transitionDeploymentState } from '@doplo/database';
+import { verifyGitHubWebhookSignature, generateCommitHash } from '@doplo/crypto';
+import { buildPreviewUrl, config } from '@doplo/config';
 import { deploymentQueue, redisConnection } from '../lib/queue';
-import { DeploymentJobPayload } from '@mini-vercel/types';
+import { DeploymentJobPayload } from '@doplo/types';
 import { validateSlug, slugify } from '../lib/slug';
 import { injectTraceContext } from '../lib/telemetry';
 
@@ -106,7 +106,7 @@ export async function registerWebhookRoutes(app: FastifyInstance) {
     // ----------------------------------------------------
     if (event === 'ping') {
       return reply.code(200).send({
-        message: 'Mini-Vercel webhook pong! Hook active.',
+        message: 'Doplo webhook pong! Hook active.',
         zen: (req.body as any)?.zen || 'Practicality beats purity.',
       });
     }
@@ -254,7 +254,7 @@ export async function registerWebhookRoutes(app: FastifyInstance) {
             data: {
               githubId: String(account?.id || payload.sender?.id || installationId),
               username: senderLogin,
-              email: `${senderLogin}@mini-vercel.local`,
+              email: `${senderLogin}@doplo.local`,
               avatarUrl: payload.sender?.avatar_url || 'https://github.com/ghost.png',
             },
           });
@@ -422,7 +422,7 @@ export async function registerWebhookRoutes(app: FastifyInstance) {
               data: {
                 githubId: String(payload.sender?.login || 'gh_default'),
                 username: payload.sender?.login || 'developer',
-                email: `${payload.sender?.login || 'developer'}@mini-vercel.local`,
+                email: `${payload.sender?.login || 'developer'}@doplo.local`,
                 avatarUrl: payload.sender?.avatar_url || 'https://github.com/ghost.png',
               },
             });

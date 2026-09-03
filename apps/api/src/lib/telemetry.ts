@@ -1,7 +1,7 @@
 import { trace, context, propagation, Span, SpanStatusCode, Tracer } from '@opentelemetry/api';
-import { config } from '@mini-vercel/config';
+import { config } from '@doplo/config';
 
-export const TRACER_NAME = 'mini-vercel-api';
+export const TRACER_NAME = 'doplo-api';
 
 /**
  * Returns standard OpenTelemetry Tracer for API

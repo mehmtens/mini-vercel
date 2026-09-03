@@ -19,7 +19,7 @@
       "title": "PostgreSQL Health",
       "type": "stat",
       "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
-      "targets": [{ "expr": "mini_vercel_dependency_up_gauge{dependency=\"postgres\"}", "refId": "A" }],
+      "targets": [{ "expr": "doplo_dependency_up_gauge{dependency=\"postgres\"}", "refId": "A" }],
       "options": {
         "colorMode": "value",
         "graphMode": "none",
@@ -31,7 +31,7 @@
       "title": "Redis Health",
       "type": "stat",
       "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
-      "targets": [{ "expr": "mini_vercel_dependency_up_gauge{dependency=\"redis\"}", "refId": "A" }],
+      "targets": [{ "expr": "doplo_dependency_up_gauge{dependency=\"redis\"}", "refId": "A" }],
       "options": {
         "colorMode": "value",
         "graphMode": "none",
@@ -43,7 +43,7 @@
       "title": "MinIO Storage Health",
       "type": "stat",
       "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
-      "targets": [{ "expr": "mini_vercel_dependency_up_gauge{dependency=\"minio\"}", "refId": "A" }],
+      "targets": [{ "expr": "doplo_dependency_up_gauge{dependency=\"minio\"}", "refId": "A" }],
       "options": {
         "colorMode": "value",
         "graphMode": "none",
@@ -55,7 +55,7 @@
       "title": "Active Build Jobs",
       "type": "stat",
       "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
-      "targets": [{ "expr": "mini_vercel_worker_active_jobs_gauge or mini_vercel_active_deployments_gauge", "refId": "A" }],
+      "targets": [{ "expr": "doplo_worker_active_jobs_gauge or doplo_active_deployments_gauge", "refId": "A" }],
       "options": {
         "colorMode": "value",
         "graphMode": "area",
@@ -67,7 +67,7 @@
       "title": "Waiting Queue Jobs",
       "type": "stat",
       "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
-      "targets": [{ "expr": "mini_vercel_queue_waiting_jobs_gauge", "refId": "A" }],
+      "targets": [{ "expr": "doplo_queue_waiting_jobs_gauge", "refId": "A" }],
       "options": {
         "colorMode": "value",
         "graphMode": "area",
@@ -114,8 +114,8 @@
       "type": "timeseries",
       "gridPos": { "h": 7, "w": 8, "x": 0, "y": 14 },
       "targets": [
-        { "expr": "histogram_quantile(0.50, sum(rate(mini_vercel_build_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50 Build Time", "refId": "A" },
-        { "expr": "histogram_quantile(0.95, sum(rate(mini_vercel_build_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95 Build Time", "refId": "B" }
+        { "expr": "histogram_quantile(0.50, sum(rate(doplo_build_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50 Build Time", "refId": "A" },
+        { "expr": "histogram_quantile(0.95, sum(rate(doplo_build_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95 Build Time", "refId": "B" }
       ]
     },
     {
@@ -124,7 +124,7 @@
       "type": "timeseries",
       "gridPos": { "h": 7, "w": 8, "x": 8, "y": 14 },
       "targets": [
-        { "expr": "histogram_quantile(0.95, sum(rate(mini_vercel_queue_wait_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95 Queue Wait", "refId": "A" }
+        { "expr": "histogram_quantile(0.95, sum(rate(doplo_queue_wait_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95 Queue Wait", "refId": "A" }
       ]
     },
     {
@@ -133,17 +133,17 @@
       "type": "timeseries",
       "gridPos": { "h": 7, "w": 8, "x": 16, "y": 14 },
       "targets": [
-        { "expr": "histogram_quantile(0.95, sum(rate(mini_vercel_artifact_fetch_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95 Artifact Fetch", "refId": "A" }
+        { "expr": "histogram_quantile(0.95, sum(rate(doplo_artifact_fetch_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95 Artifact Fetch", "refId": "A" }
       ]
     }
   ],
   "refresh": "10s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["mini-vercel", "production", "observability"],
+  "tags": ["doplo", "production", "observability"],
   "time": { "from": "now-1h", "to": "now" },
   "timepicker": { "refresh_intervals": ["5s", "10s", "30s", "1m"] },
   "timezone": "browser",
-  "title": "Mini-Vercel System Overview",
+  "title": "Doplo System Overview",
   "version": 1
 }

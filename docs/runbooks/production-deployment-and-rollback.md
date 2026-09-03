@@ -1,6 +1,6 @@
 # Production Deployment, Observability & Rollback Runbook
 
-This document details standard operating procedures for deploying, monitoring, and rolling back PulseOps in production environments.
+This document details standard operating procedures for deploying, monitoring, and rolling back Doplo in production environments.
 
 ---
 
@@ -17,8 +17,8 @@ This document details standard operating procedures for deploying, monitoring, a
 ### Step-by-Step Deployment
 1. **Clone repository and configure environment**:
    ```bash
-   git clone https://github.com/mehmtens/mini-vercel.git /opt/mini-vercel
-   cd /opt/mini-vercel
+   git clone https://github.com/mehmtens/mini-vercel.git /opt/doplo
+   cd /opt/doplo
    cp deploy/production.env.example .env
    # Edit .env with real credentials generated via password managers / Vault
    # Set DOCKER_GID to the output of:
@@ -60,7 +60,7 @@ This document details standard operating procedures for deploying, monitoring, a
    curl -i "https://app.yourdomain.com/api/tls/ask?domain=random-unregistered.yourdomain.com"
    ```
 
-   PulseOps only authorizes certificates for the management hostname, an active
+   Doplo only authorizes certificates for the management hostname, an active
    project hostname, or a `READY` immutable preview. Arbitrary wildcard and
    external custom domains remain fail-closed until domain ownership verification
    and an explicit custom-domain registry are implemented.
@@ -69,7 +69,7 @@ This document details standard operating procedures for deploying, monitoring, a
 
 ## 📈 2. Observability & Monitoring Stack (Prometheus + Grafana)
 
-PulseOps exposes standard Prometheus metrics from Fastify API (`:8080/metrics`) and the BullMQ Worker process (`:9090/metrics` over internal container network).
+Doplo exposes standard Prometheus metrics from Fastify API (`:8080/metrics`) and the BullMQ Worker process (`:9090/metrics` over internal container network).
 
 ### Validating Prometheus Configuration & Alert Rules
 - **Linux / Bash**:
@@ -92,7 +92,7 @@ docker compose --env-file .env -f deploy/docker-compose.production.yml -f deploy
 
 ## 🔄 3. Zero-Downtime Rollback Procedure
 
-PulseOps uses immutable content-addressed storage in MinIO and atomic database pointer swaps.
+Doplo uses immutable content-addressed storage in MinIO and atomic database pointer swaps.
 
 ### A. Application Rollback (User Project Deployment)
 If a user deploys a broken build to production:
@@ -106,10 +106,10 @@ If a user deploys a broken build to production:
    - Execution completes in $\le 1.0$s.
 
 ### B. Platform Infrastructure Rollback
-If a new release of the PulseOps platform itself introduces a regression:
+If a new release of the Doplo platform itself introduces a regression:
 1. Identify the previous stable Git commit or tag:
    ```bash
-   cd /opt/mini-vercel
+   cd /opt/doplo
    git log -n 5 --oneline
    ```
 2. Checkout the previous release:

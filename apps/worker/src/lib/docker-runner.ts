@@ -3,7 +3,7 @@ import os from 'os';
 import path from 'path';
 import fs from 'fs';
 import tarfs from 'tar-fs';
-import { config } from '@mini-vercel/config';
+import { config } from '@doplo/config';
 import { buildPlanner, BuildPlan } from './build-planner.js';
 
 export class DockerUnavailableError extends Error {
@@ -122,7 +122,7 @@ export class DockerRunner {
       throw new DockerUnavailableError();
     }
 
-    const workspaceDir = options.workspaceDir || path.join(os.tmpdir(), 'mini-vercel-builds', deploymentId);
+    const workspaceDir = options.workspaceDir || path.join(os.tmpdir(), 'doplo-builds', deploymentId);
     if (!fs.existsSync(workspaceDir)) {
       fs.mkdirSync(workspaceDir, { recursive: true });
     }
@@ -167,7 +167,7 @@ export class DockerRunner {
     const image = `node:${plan.nodeVersion}-alpine`;
     const envArray = Object.entries({ ...plan.env, ...envVars }).map(([k, v]) => `${k}=${v}`);
     envArray.push(
-      `MINI_VERCEL_DEPLOYMENT_ID=${deploymentId}`,
+      `DOPLO_DEPLOYMENT_ID=${deploymentId}`,
       `HOME=/home/node`,
       `TMPDIR=/tmp`,
       `NODE_ENV=production`,

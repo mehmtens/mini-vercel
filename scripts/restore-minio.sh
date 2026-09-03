@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Mini-Vercel MinIO / S3 Artifacts Restore Script
+# Doplo MinIO / S3 Artifacts Restore Script
 # Includes SHA256 integrity verification before archive extraction
 # ==============================================================================
 set -euo pipefail
@@ -11,7 +11,7 @@ if [ "$#" -lt 1 ]; then
 fi
 
 ARCHIVE_FILE="$1"
-BUCKET_NAME="${MINIO_BUCKET_BUILDS:-mini-vercel-builds}"
+BUCKET_NAME="${MINIO_BUCKET_BUILDS:-doplo-builds}"
 CHECKSUM_FILE="${ARCHIVE_FILE}.sha256"
 SKIP_CHECKSUM=false
 

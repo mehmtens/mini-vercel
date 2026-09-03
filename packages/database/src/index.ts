@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { Pool, PoolConfig } from 'pg';
-import { config } from '@mini-vercel/config';
+import { config } from '@doplo/config';
 
 import { transitionDeploymentState } from './state-machine';
 

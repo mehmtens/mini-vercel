@@ -1,6 +1,6 @@
 # 📨 BullMQ Kuyruk ve Worker Mimarisi
 
-PulseOps, yüksek performanslı, asenkron ve güvenilir iş dağıtımı için **Redis** destekli **BullMQ** kuyruk motorunu kullanır.
+Doplo, yüksek performanslı, asenkron ve güvenilir iş dağıtımı için **Redis** destekli **BullMQ** kuyruk motorunu kullanır.
 
 ---
 
@@ -48,7 +48,7 @@ export interface DeploymentJobPayload {
 2. **DEPENDENCIES**: `pnpm` paket yöneticisiyle bağımlılıklar çözülür ve önbelleğe alınır.
 3. **COMPILE**: Desteklenen statik framework üretim paketi izole Docker sandbox'ında derlenir.
 4. **STATIC_GEN**: Statik HTML ve optimize edilmiş asset'ler üretilir.
-5. **MINIO_UPLOAD**: Üretilen statik dosyalar ve metadata S3 uyumlu MinIO bucket'ına (`mini-vercel-builds/${deployment_id}/`) yüklenir.
+5. **MINIO_UPLOAD**: Üretilen statik dosyalar ve metadata S3 uyumlu MinIO bucket'ına (`doplo-builds/${deployment_id}/`) yüklenir.
 6. **EDGE_DEPLOY**: Canlı önizleme URL'i (`https://${project_slug}-${short_commit}.${BASE_DOMAIN}`) yapılandırılır ve Caddy gateway'e bağlanır.
 7. **SUCCESS**: PostgreSQL kaydı `READY` durumuna güncellenir ve toplam süre kaydedilir.
 

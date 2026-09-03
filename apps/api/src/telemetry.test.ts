@@ -26,8 +26,8 @@ describe('OpenTelemetry Distributed Tracing & InMemorySpanExporter Verification'
   });
 
   it('1. Generates API root span and propagates W3C traceparent carrier to Worker', async () => {
-    const apiTracer = tracerProvider.getTracer('mini-vercel-api');
-    const workerTracer = tracerProvider.getTracer('mini-vercel-worker');
+    const apiTracer = tracerProvider.getTracer('doplo-api');
+    const workerTracer = tracerProvider.getTracer('doplo-worker');
 
     // 1. API receives webhook and initiates root span
     const apiSpan = apiTracer.startSpan('api.webhook.receive', {}, ROOT_CONTEXT);

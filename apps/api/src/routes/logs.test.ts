@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { buildApp } from '../index';
-import { prisma, DeploymentStatus, DeploymentTrigger, LogStream } from '@mini-vercel/database';
+import { prisma, DeploymentStatus, DeploymentTrigger, LogStream } from '@doplo/database';
 
 describe('SSE Live Log Stream & History Contract (/api/deployments/:id/logs/stream)', () => {
   let app: FastifyInstance;
@@ -21,7 +21,7 @@ describe('SSE Live Log Stream & History Contract (/api/deployments/:id/logs/stre
       create: {
         githubId: 'gh_logs_alice',
         username: 'logs_alice',
-        email: 'alice_logs@mini-vercel.local',
+        email: 'alice_logs@doplo.local',
       },
     });
     userA = { id: uA.id, username: uA.username };
@@ -32,7 +32,7 @@ describe('SSE Live Log Stream & History Contract (/api/deployments/:id/logs/stre
       create: {
         githubId: 'gh_logs_bob',
         username: 'logs_bob',
-        email: 'bob_logs@mini-vercel.local',
+        email: 'bob_logs@doplo.local',
       },
     });
     userB = { id: uB.id, username: uB.username };
@@ -43,8 +43,8 @@ describe('SSE Live Log Stream & History Contract (/api/deployments/:id/logs/stre
         userId: userA.id,
         name: `logs-proj-a-${Date.now()}`,
         slug: `logs-proj-a-${Date.now()}`,
-        repoName: 'mini-vercel/logs-proj-a',
-        repoUrl: 'https://github.com/mini-vercel/logs-proj-a',
+        repoName: 'doplo/logs-proj-a',
+        repoUrl: 'https://github.com/doplo/logs-proj-a',
       },
     });
 
@@ -53,8 +53,8 @@ describe('SSE Live Log Stream & History Contract (/api/deployments/:id/logs/stre
         userId: userB.id,
         name: `logs-proj-b-${Date.now()}`,
         slug: `logs-proj-b-${Date.now()}`,
-        repoName: 'mini-vercel/logs-proj-b',
-        repoUrl: 'https://github.com/mini-vercel/logs-proj-b',
+        repoName: 'doplo/logs-proj-b',
+        repoUrl: 'https://github.com/doplo/logs-proj-b',
       },
     });
   });

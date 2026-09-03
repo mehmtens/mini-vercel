@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { db } from '@mini-vercel/database';
-import { config } from '@mini-vercel/config';
+import { db } from '@doplo/database';
+import { config } from '@doplo/config';
 import { redisConnection } from '../lib/queue';
 import { minioClient } from '../lib/minio';
 import { dependencyUpGauge } from '../lib/metrics';

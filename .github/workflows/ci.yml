@@ -23,7 +23,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: mini_vercel
+          POSTGRES_DB: doplo
         ports:
           - 5435:5432
         options: >-
@@ -45,14 +45,14 @@ jobs:
     env:
       NODE_ENV: test
       CI: "true"
-      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5435/mini_vercel
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5435/doplo
       REDIS_URL: redis://127.0.0.1:6379
       MINIO_ENDPOINT: 127.0.0.1
       MINIO_PORT: "9000"
       MINIO_USE_SSL: "false"
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
-      MINIO_BUCKET_BUILDS: mini-vercel-builds
+      MINIO_BUCKET_BUILDS: doplo-builds
       CRYPTO_MASTER_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
       GITHUB_WEBHOOK_SECRET: dev_webhook_secret_key_12345
       NEXT_PUBLIC_API_URL: http://localhost:8080
@@ -80,7 +80,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Chromium for Dashboard E2E Tests
-        run: pnpm --filter @mini-vercel/web exec playwright install --with-deps chromium
+        run: pnpm --filter @doplo/web exec playwright install --with-deps chromium
 
       - name: Dependency Security Audit
         run: pnpm audit --prod
@@ -91,13 +91,13 @@ jobs:
           APP_DOMAIN: app.ci.example.com
           ACME_EMAIL: ci@example.com
           DOCKER_GID: "999"
-          POSTGRES_USER: pulseops_ci
+          POSTGRES_USER: doplo_ci
           POSTGRES_PASSWORD: ci-database-password-with-32-characters
-          POSTGRES_DB: pulseops_ci
+          POSTGRES_DB: doplo_ci
           REDIS_PASSWORD: ci-redis-password-with-32-characters
-          MINIO_ROOT_USER: pulseops_ci
+          MINIO_ROOT_USER: doplo_ci
           MINIO_ROOT_PASSWORD: ci-minio-password-with-32-characters
-          MINIO_BUCKET_BUILDS: pulseops-ci-builds
+          MINIO_BUCKET_BUILDS: doplo-ci-builds
           SESSION_SECRET: ci-session-secret-with-at-least-32-characters
           GITHUB_CLIENT_ID: ci_github_client_id
           GITHUB_CLIENT_SECRET: ci-github-client-secret-with-32-characters
@@ -151,13 +151,13 @@ jobs:
           '
 
       - name: Generate Prisma Client & Sync Schema
-        run: pnpm --filter @mini-vercel/database prisma:generate
+        run: pnpm --filter @doplo/database prisma:generate
 
       - name: Bootstrap MinIO Builds Bucket & Verify Presence
         run: |
           # JavaScript template literals must remain shell-literal.
           # shellcheck disable=SC2016
-          pnpm --filter @mini-vercel/api exec node -e '
+          pnpm --filter @doplo/api exec node -e '
             const Minio = require("minio");
             const client = new Minio.Client({
               endPoint: "127.0.0.1",
@@ -167,7 +167,7 @@ jobs:
               secretKey: "minioadmin"
             });
             async function bootstrap() {
-              const bucketName = "mini-vercel-builds";
+              const bucketName = "doplo-builds";
               const exists = await client.bucketExists(bucketName);
               if (!exists) {
                 await client.makeBucket(bucketName, "us-east-1");
@@ -198,13 +198,13 @@ jobs:
         run: pnpm build
 
       - name: Run Dashboard Browser E2E Tests
-        run: pnpm --filter @mini-vercel/web test:e2e
+        run: pnpm --filter @doplo/web test:e2e
 
       - name: Upload Browser Test Diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: pulseops-playwright-diagnostics
+          name: doplo-playwright-diagnostics
           path: |
             apps/web/playwright-report
             apps/web/test-results
@@ -216,5 +216,5 @@ jobs:
         with:
           path: .
           format: cyclonedx-json
-          artifact-name: pulseops-sbom.cdx.json
+          artifact-name: doplo-sbom.cdx.json
           upload-release-assets: false

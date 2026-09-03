@@ -1,8 +1,8 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { prisma, DeploymentStatus, DeploymentTrigger, LogStream, AuditOperation, transitionDeploymentState } from '@mini-vercel/database';
-import { generateCommitHash } from '@mini-vercel/crypto';
-import { buildPreviewUrl, config } from '@mini-vercel/config';
-import { CreateDeploymentDto, DeploymentJobPayload } from '@mini-vercel/types';
+import { prisma, DeploymentStatus, DeploymentTrigger, LogStream, AuditOperation, transitionDeploymentState } from '@doplo/database';
+import { generateCommitHash } from '@doplo/crypto';
+import { buildPreviewUrl, config } from '@doplo/config';
+import { CreateDeploymentDto, DeploymentJobPayload } from '@doplo/types';
 import { minioClient } from '../lib/minio.js';
 import { deploymentQueue } from '../lib/queue';
 import { authenticateRequest } from '../lib/auth';
@@ -45,7 +45,7 @@ export async function registerDeploymentRoutes(app: FastifyInstance) {
         name: projectName,
         slug,
         repoName: projectName,
-        repoUrl: repoUrl || `https://github.com/mini-vercel/${projectName}`,
+        repoUrl: repoUrl || `https://github.com/doplo/${projectName}`,
         branch,
         framework: 'nextjs',
       },
@@ -74,7 +74,7 @@ export async function registerDeploymentRoutes(app: FastifyInstance) {
 
     const resolvedBranch = branch || 'main';
     const resolvedCommit = commit_hash || generateCommitHash();
-    const resolvedRepo = repo_url || `https://github.com/mini-vercel/${project_name}`;
+    const resolvedRepo = repo_url || `https://github.com/doplo/${project_name}`;
 
     try {
       // 1. Resolve project for user

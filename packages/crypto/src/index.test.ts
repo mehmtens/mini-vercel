@@ -13,7 +13,7 @@ import {
   generateMasterKey,
 } from './index';
 
-describe('@mini-vercel/crypto Unit Tests', () => {
+describe('@doplo/crypto Unit Tests', () => {
   // Canonical 64-character hex master key (32 bytes)
   const canonicalMasterKey = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
   const sampleSecret = 'DATABASE_URL=postgresql://user:pass@localhost:5432/db';
@@ -145,7 +145,7 @@ describe('@mini-vercel/crypto Unit Tests', () => {
     });
 
     it('hashes data with sha256', () => {
-      const hash = hashData('hello-mini-vercel');
+      const hash = hashData('hello-doplo');
       expect(hash).toHaveLength(64);
     });
 

@@ -1,4 +1,4 @@
-# Mini Vercel — Uygulama ve Geliştirme Roadmap'i
+# Doplo — Uygulama ve Geliştirme Roadmap'i
 
 > Amaç: GitHub deposundan kaynak kodu alıp güvenli bir sandbox içinde build eden, canlı log gösteren, preview URL üreten ve hızlı rollback sağlayan tek sunuculu bir PaaS geliştirmek.
 
@@ -88,7 +88,7 @@ Antigravity IDE'nin çalışacağı boş ana klasörü oluşturmak ve gerekli ar
 
 ### Senin yapacağın
 
-- [ ] Bilgisayarda `mini-vercel` isimli boş bir ana klasör oluştur.
+- [ ] Bilgisayarda `doplo` isimli boş bir ana klasör oluştur.
 - [ ] Bu klasörü Antigravity IDE ile aç.
 - [ ] Git, Node.js LTS, pnpm ve Docker Desktop'ın kurulu olduğundan emin ol.
 - [ ] Docker Desktop'ı çalıştır.
@@ -98,7 +98,7 @@ Alt klasörleri kendin oluşturma; IDE oluşturacak.
 ### Antigravity promptu
 
 ```text
-Mini Vercel projesinin yerel geliştirme ön koşulları için kısa bir kontrol listesi hazırla.
+Doplo projesinin yerel geliştirme ön koşulları için kısa bir kontrol listesi hazırla.
 Windows üzerinde Git, Node.js LTS, pnpm, Docker Desktop ve WSL2 gereksinimlerini belirt.
 Her araç için doğrulama komutunu ve beklenen sonucu yaz. Henüz kod üretme.
 ```
@@ -106,7 +106,7 @@ Her araç için doğrulama komutunu ve beklenen sonucu yaz. Henüz kod üretme.
 ### Antigravity IDE promptu
 
 ```text
-Bu boş klasörün Mini Vercel projesi için uygun olup olmadığını kontrol et.
+Bu boş klasörün Doplo projesi için uygun olup olmadığını kontrol et.
 Git, Node.js, pnpm ve Docker sürümlerini doğrula. Eksik araç varsa dosya oluşturmadan önce bildir.
 Her şey uygunsa Git repository başlat ve yalnızca temel .gitignore dosyasını oluştur.
 ```
@@ -128,7 +128,7 @@ API, web, worker ve altyapı servislerinin aynı repository'de ayağa kalkması.
 ### Antigravity promptu — proje iskeleti denetimi
 
 ```text
-Node.js, Fastify, Next.js, BullMQ, PostgreSQL, Redis, MinIO ve Caddy kullanan Mini Vercel için
+Node.js, Fastify, Next.js, BullMQ, PostgreSQL, Redis, MinIO ve Caddy kullanan Doplo için
 pnpm workspace ve Turborepo klasör yapısını tasarla. Paket sınırlarını, bağımlılık yönlerini,
 portları ve health check'leri belirt. Çıktıyı IDE'nin uygulayabileceği kabul kriterlerine dönüştür.
 ```
@@ -136,7 +136,7 @@ portları ve health check'leri belirt. Çıktıyı IDE'nin uygulayabileceği kab
 ### Antigravity IDE promptu — iskeleti oluştur
 
 ```text
-Mini Vercel pnpm monorepo'sunu oluştur:
+Doplo pnpm monorepo'sunu oluştur:
 
 apps/api
 apps/web
@@ -175,7 +175,7 @@ Kullanıcı, proje, environment variable ve deployment kayıtlarının kalıcı 
 ### Antigravity promptu — veri modeli
 
 ```text
-Mini Vercel MVP için users, projects, project_env_vars, deployments, deployment_events ve
+Doplo MVP için users, projects, project_env_vars, deployments, deployment_events ve
 deployment_logs veri modelini incele. UUID anahtarları, foreign key'ler, unique constraint'ler,
 indeksler, timestamp'ler ve silme davranışlarını tanımla. Deployment durumlarını ayrıca açıkla.
 Prisma şemasının kabul kriterlerini ve riskli migration senaryolarını yaz.
@@ -232,7 +232,7 @@ Terminal durumlar: `READY`, `FAILED`, `CANCELLED`.
 ### Antigravity promptu — state machine
 
 ```text
-Mini Vercel deployment state machine'ini tasarla. Her durum için izin verilen sonraki durumları,
+Doplo deployment state machine'ini tasarla. Her durum için izin verilen sonraki durumları,
 giriş/çıkış koşullarını, timeout'u, retry politikasını ve hata kodlarını tablo halinde yaz.
 Duplicate webhook, worker crash, Redis kesintisi ve aynı job'ın iki kez teslim edilmesi durumlarında
 idempotency stratejisini açıkla. IDE için test matrisi üret.
@@ -280,7 +280,7 @@ Kullanıcının GitHub ile giriş yapması, repository seçmesi ve push ile buil
 ### Antigravity promptu — GitHub güvenlik planı
 
 ```text
-Mini Vercel için GitHub App ve OAuth entegrasyon planı hazırla. Gerekli minimum izinleri,
+Doplo için GitHub App ve OAuth entegrasyon planı hazırla. Gerekli minimum izinleri,
 installation akışını, callback güvenliğini, state/PKCE kullanımını, webhook HMAC doğrulamasını,
 delivery ID ile replay/duplicate korumasını ve token saklama politikasını tanımla.
 ```
@@ -530,7 +530,7 @@ Domain takeover, duplicate claim ve silme senaryolarını test et.
 ### Antigravity promptu — güvenlik denetimi
 
 ```text
-Mini Vercel MVP'yi authentication, authorization, webhook, Docker runner, network, secrets,
+Doplo MVP'yi authentication, authorization, webhook, Docker runner, network, secrets,
 artifact serving, TLS, dependency supply chain ve denial-of-service açısından denetle.
 Bulgu başına severity, saldırı yolu, düzeltme ve doğrulama testi üret. Production blocker'ları ayır.
 ```
@@ -566,7 +566,7 @@ Critical vulnerability olduğunda pipeline'ı durdur; false-positive istisnalar�
 ### Antigravity promptu — SLO ve runbook
 
 ```text
-Mini Vercel için deployment success rate, queue wait time, build duration, API availability,
+Doplo için deployment success rate, queue wait time, build duration, API availability,
 artifact serving latency ve log delivery metriklerini tanımla. SLO, alert eşikleri ve Redis,
 PostgreSQL, disk doluluğu, failed build spike için on-call runbook hazırla.
 ```
@@ -602,7 +602,7 @@ idempotent cleanup job ekle. Önce dry-run modu ve güvenli sınırlar uygula. R
 ### Antigravity promptu — go/no-go planı
 
 ```text
-Mini Vercel MVP için production go/no-go checklist'i oluştur. Fonksiyonel test, güvenlik,
+Doplo MVP için production go/no-go checklist'i oluştur. Fonksiyonel test, güvenlik,
 performans, backup/restore, observability, DNS/TLS ve rollback kriterlerini blocker/non-blocker
 olarak sınıflandır. Redis kesintisi, worker crash, Docker timeout, MinIO kesintisi ve disk doluluğu
 senaryolarında beklenen davranışı yaz.
@@ -666,7 +666,7 @@ Sadece MVP production'da kararlı çalıştıktan sonra:
 ### Antigravity promptu — ölçekleme kararı
 
 ```text
-Mevcut production metriklerine göre tek sunuculu Mini Vercel mimarisinin darboğazlarını analiz et.
+Mevcut production metriklerine göre tek sunuculu Doplo mimarisinin darboğazlarını analiz et.
 Kubernetes'e geçişi varsayma. Önce ayrı worker VM, managed database, managed object storage ve
 horizontal worker seçeneklerini maliyet, güvenlik ve operasyon yükü açısından karşılaştır.
 Ölçülebilir geçiş eşikleri öner.
@@ -695,10 +695,10 @@ Bu takvim hedef sırasını gösterir; bir fazın tamamlanma ölçütleri geçme
 
 ## 5. İlk çalıştırılacak prompt
 
-Önce Antigravity'ye Faz 0'daki kontrol listesi promptunu ver. Araçlar zaten kuruluysa boş `mini-vercel` klasörünü Antigravity IDE'de aç ve aşağıdaki promptu çalıştır:
+Önce Antigravity'ye Faz 0'daki kontrol listesi promptunu ver. Araçlar zaten kuruluysa boş `doplo` klasörünü Antigravity IDE'de aç ve aşağıdaki promptu çalıştır:
 
 ```text
-Bu boş klasörün Mini Vercel projesi için uygun olup olmadığını kontrol et.
+Bu boş klasörün Doplo projesi için uygun olup olmadığını kontrol et.
 Git, Node.js, pnpm ve Docker sürümlerini doğrula. Eksik araç varsa dosya oluşturmadan önce bildir.
 Her şey uygunsa Git repository başlat, temel .gitignore oluştur ve sonuçları özetle.
 

@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
-import { db } from '@mini-vercel/database';
-import { StatsResponse } from '@mini-vercel/types';
+import { db } from '@doplo/database';
+import { StatsResponse } from '@doplo/types';
 import { authenticateRequest } from '../lib/auth';
 
 export async function registerStatsRoutes(app: FastifyInstance) {

@@ -1,0 +1,10 @@
+[Unit]
+Description=Timer for Doplo MinIO / S3 Artifacts Backup (Daily at 02:00 UTC)
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+Persistent=true
+Unit=doplo-backup-minio.service
+
+[Install]
+WantedBy=timers.target

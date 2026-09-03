@@ -1,6 +1,6 @@
 # Backup & Disaster Recovery Runbook
 
-This runbook outlines automated backup policies, retention, integrity verification, dry-run simulation, and disaster recovery procedures for PulseOps PostgreSQL and MinIO storage layers.
+This runbook outlines automated backup policies, retention, integrity verification, dry-run simulation, and disaster recovery procedures for Doplo PostgreSQL and MinIO storage layers.
 
 ---
 
@@ -8,8 +8,8 @@ This runbook outlines automated backup policies, retention, integrity verificati
 
 | Component | Target Location | Frequency | Retention | Script / Mode |
 |---|---|---|---|---|
-| **PostgreSQL DB** | `/var/backups/mini-vercel/postgres` | Every 6 hours | 7 Days | `scripts/backup-db.sh` (`--dry-run` supported) |
-| **MinIO Artifacts** | `/var/backups/mini-vercel/minio` | Daily (02:00 UTC) | 14 Days | `scripts/backup-minio.sh` (`--dry-run` supported) |
+| **PostgreSQL DB** | `/var/backups/doplo/postgres` | Every 6 hours | 7 Days | `scripts/backup-db.sh` (`--dry-run` supported) |
+| **MinIO Artifacts** | `/var/backups/doplo/minio` | Daily (02:00 UTC) | 14 Days | `scripts/backup-minio.sh` (`--dry-run` supported) |
 | **Resource Cleanup** | Host temp / MinIO unlinked | Daily (04:00 UTC) | N/A | `scripts/cleanup-orphan-resources.ts` (`--dry-run` supported) |
 | **DR Drill** | Ephemeral test containers | Monthly / On-Demand | N/A | `scripts/backup-restore-drill.sh` |
 
@@ -19,11 +19,11 @@ This runbook outlines automated backup policies, retention, integrity verificati
 
 ### Option A: Systemd Timers (Recommended for Linux hosts)
 ```bash
-cp deploy/systemd/mini-vercel-backup-*.service /etc/systemd/system/
-cp deploy/systemd/mini-vercel-backup-*.timer /etc/systemd/system/
+cp deploy/systemd/doplo-backup-*.service /etc/systemd/system/
+cp deploy/systemd/doplo-backup-*.timer /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable --now mini-vercel-backup-db.timer
-systemctl enable --now mini-vercel-backup-minio.timer
+systemctl enable --now doplo-backup-db.timer
+systemctl enable --now doplo-backup-minio.timer
 ```
 
 ### Option B: Automated Crontab Installer
@@ -61,7 +61,7 @@ pnpm tsx scripts/cleanup-orphan-resources.ts --dry-run
    ```
 2. Run restore script (SHA256 verified automatically):
    ```bash
-   ./scripts/restore-db.sh /var/backups/mini-vercel/postgres/mini_vercel_20260830_060000.sql.gz
+   ./scripts/restore-db.sh /var/backups/doplo/postgres/doplo_20260830_060000.sql.gz
    ```
 3. Restart services:
    ```bash
@@ -71,11 +71,11 @@ pnpm tsx scripts/cleanup-orphan-resources.ts --dry-run
 ### Restoring MinIO Artifacts
 1. Run restore script:
    ```bash
-   ./scripts/restore-minio.sh /var/backups/mini-vercel/minio/mini-vercel-builds_20260830_020000.tar.gz
+   ./scripts/restore-minio.sh /var/backups/doplo/minio/doplo-builds_20260830_020000.tar.gz
    ```
 2. Verify objects presence:
    ```bash
-   mc ls current/mini-vercel-builds/
+   mc ls current/doplo-builds/
    ```
 
 ---
@@ -85,4 +85,4 @@ To run a clean-slate backup-and-restore simulation on temporary ephemeral contai
 ```bash
 bash scripts/backup-restore-drill.sh
 ```
-Check generated drill results in [`docs/runbooks/restore-drill-report.md`](file:///c:/mini-vercel/docs/runbooks/restore-drill-report.md).
+Check generated drill results in [`docs/runbooks/restore-drill-report.md`](file:///c:/doplo/docs/runbooks/restore-drill-report.md).
