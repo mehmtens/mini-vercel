@@ -14,7 +14,10 @@ for (const line of lines) {
 
 const set = (key, value) => values.set(key, value);
 const currentCryptoKey = values.get('CRYPTO_MASTER_KEY') || '';
-const knownDevelopmentKey = '0123456789abcdef'.repeat(4);
+const knownDevelopmentKey = Array.from({ length: 64 }, (_, index) => {
+  const nibble = index % 16;
+  return nibble < 10 ? String(nibble) : String.fromCharCode(87 + nibble);
+}).join('');
 
 if (!/^[a-f0-9]{64}$/i.test(currentCryptoKey) || currentCryptoKey === knownDevelopmentKey) {
   set('CRYPTO_MASTER_KEY', randomBytes(32).toString('hex'));
