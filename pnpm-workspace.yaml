@@ -4,6 +4,7 @@ packages:
 
 overrides:
   decode-uri-component: ^0.5.0
+  minio>stream-json: link:packages/stream-json-compat
   uuid: ^11.1.1
 
 allowBuilds:
