@@ -1,0 +1,61 @@
+services:
+  postgres:
+    ports: !reset []
+
+  redis:
+    ports: !reset []
+
+  minio:
+    ports: !reset []
+
+  api:
+    environment:
+      NODE_ENV: production
+      APP_URL: https://doplo.dev
+      API_URL: https://doplo.dev
+      BASE_DOMAIN: doplo.dev
+      APP_DOMAIN: doplo.dev
+      CORS_ALLOWED_ORIGINS: https://doplo.dev
+      DEV_AUTH_BYPASS: "false"
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
+      GITHUB_CALLBACK_URL: https://doplo.dev/api/auth/callback/github
+    ports: !reset []
+
+  worker:
+    environment:
+      NODE_ENV: production
+
+  web:
+    build:
+      args:
+        NEXT_PUBLIC_API_URL: https://doplo.dev
+        NEXT_PUBLIC_BASE_DOMAIN: doplo.dev
+    environment:
+      NEXT_PUBLIC_API_URL: https://doplo.dev
+      NEXT_PUBLIC_BASE_DOMAIN: doplo.dev
+    ports: !reset []
+
+  caddy:
+    ports: !reset []
+
+  tunnel-edge:
+    image: caddy:2-alpine
+    container_name: doplo_tunnel_edge
+    restart: unless-stopped
+    volumes:
+      - ./deploy/caddy/Caddyfile.tunnel:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - api
+      - web
+    networks:
+      - doplo_network
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.7.2
+    container_name: doplo_cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN:?CLOUDFLARE_TUNNEL_TOKEN is required}
+    depends_on:
+      - tunnel-edge
+    networks:
+      - doplo_network

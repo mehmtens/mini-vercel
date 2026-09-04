@@ -1,0 +1,39 @@
+{
+	admin off
+	auto_https off
+}
+
+# Cloudflare terminates public TLS. This internal edge only accepts traffic
+# arriving from the cloudflared container on the private Compose network.
+http://doplo.dev {
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options SAMEORIGIN
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+
+	handle /api/* {
+		reverse_proxy api:8080
+	}
+
+	handle /health* {
+		reverse_proxy api:8080
+	}
+
+	handle /ready* {
+		reverse_proxy api:8080
+	}
+
+	handle /* {
+		reverse_proxy web:3000
+	}
+}
+
+# Immutable previews and promoted project deployments are resolved by the
+# authenticated artifact gateway rather than exposing MinIO directly.
+http://*.doplo.dev {
+	handle {
+		reverse_proxy api:8080
+	}
+}
