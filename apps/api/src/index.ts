@@ -12,6 +12,8 @@ import { prisma } from '@doplo/database';
 import { ensureBucketExists } from './lib/minio';
 import { registerHealthRoutes } from './routes/health';
 import { registerAuthRoutes } from './routes/auth';
+import { registerPasswordAuthRoutes } from './routes/password-auth';
+import { registerGoogleAuthRoutes } from './routes/google-auth';
 import { registerGitHubRoutes } from './routes/github';
 import { registerDeploymentRoutes } from './routes/deployments';
 import { registerProjectRoutes } from './routes/projects';
@@ -41,30 +43,33 @@ export async function buildApp(): Promise<FastifyInstance> {
   validateEnvironmentSecurity();
 
   const app = fastify({
-    logger: config.env !== 'test' ? {
-      level: process.env.LOG_LEVEL || 'info',
-      formatters: {
-        level(label) {
-          return { level: label };
-        },
-      },
-      serializers: {
-        req(req) {
-          return {
-            id: req.id,
-            method: req.method,
-            url: req.url,
-            hostname: req.hostname,
-            remoteAddress: req.ip,
-          };
-        },
-        res(res) {
-          return {
-            statusCode: res.statusCode,
-          };
-        },
-      },
-    } : false,
+    logger:
+      config.env !== 'test'
+        ? {
+            level: process.env.LOG_LEVEL || 'info',
+            formatters: {
+              level(label) {
+                return { level: label };
+              },
+            },
+            serializers: {
+              req(req) {
+                return {
+                  id: req.id,
+                  method: req.method,
+                  url: req.url,
+                  hostname: req.hostname,
+                  remoteAddress: req.ip,
+                };
+              },
+              res(res) {
+                return {
+                  statusCode: res.statusCode,
+                };
+              },
+            },
+          }
+        : false,
     genReqId: (req) => (req.headers['x-request-id'] as string) || crypto.randomUUID(),
     bodyLimit: config.security.bodyLimit, // 1MB default body limit to prevent memory exhaustion
     connectionTimeout: config.security.requestTimeoutMs,
@@ -91,7 +96,9 @@ export async function buildApp(): Promise<FastifyInstance> {
         frameAncestors: ["'none'"],
       },
     },
-    hsts: config.isProduction ? { maxAge: 31536000, includeSubDomains: true, preload: true } : false,
+    hsts: config.isProduction
+      ? { maxAge: 31536000, includeSubDomains: true, preload: true }
+      : false,
     crossOriginResourcePolicy: { policy: 'cross-origin' },
     crossOriginOpenerPolicy: { policy: 'same-origin' },
   });
@@ -178,7 +185,12 @@ export async function buildApp(): Promise<FastifyInstance> {
     // CSRF Protection for Cookie-Authenticated Mutation Requests
     const isMutation = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method);
     const isWebhook = rawUrl.startsWith('/api/webhooks') || rawUrl.startsWith('/webhooks');
-    const isOAuth = rawUrl.startsWith('/api/auth/github') || rawUrl.startsWith('/auth/github');
+    const isOAuth =
+      rawUrl.startsWith('/api/auth/github') ||
+      rawUrl.startsWith('/api/v1/auth/github') ||
+      rawUrl.startsWith('/api/auth/google') ||
+      rawUrl.startsWith('/api/v1/auth/google') ||
+      rawUrl.startsWith('/auth/github');
 
     if (isMutation && !isWebhook && !isOAuth) {
       const hasSessionCookie = Boolean(req.cookies?.mini_session);
@@ -189,7 +201,8 @@ export async function buildApp(): Promise<FastifyInstance> {
         const csrfToken = req.headers['x-csrf-token'] || req.headers['x-requested-with'];
         const secFetchSite = req.headers['sec-fetch-site'];
 
-        const isValidOrigin = secFetchSite === 'same-origin' || secFetchSite === 'none' || Boolean(csrfToken);
+        const isValidOrigin =
+          secFetchSite === 'same-origin' || secFetchSite === 'none' || Boolean(csrfToken);
 
         if (!isValidOrigin && config.isProduction) {
           return reply.status(403).send({
@@ -221,7 +234,9 @@ export async function buildApp(): Promise<FastifyInstance> {
     reply.status(statusCode).send({
       statusCode,
       error: errorName,
-      code: (error as any).code || (statusCode >= 500 ? AppErrorCode.INTERNAL_ERROR : AppErrorCode.INVALID_INPUT),
+      code:
+        (error as any).code ||
+        (statusCode >= 500 ? AppErrorCode.INTERNAL_ERROR : AppErrorCode.INVALID_INPUT),
       message,
       ...(error.validation ? { validation: error.validation } : {}),
     });
@@ -238,6 +253,8 @@ export async function buildApp(): Promise<FastifyInstance> {
   // 9. Register all API routes
   await registerHealthRoutes(app);
   await registerAuthRoutes(app);
+  await registerPasswordAuthRoutes(app);
+  await registerGoogleAuthRoutes(app);
   await registerGitHubRoutes(app);
   await registerProjectRoutes(app);
   await registerDeploymentRoutes(app);

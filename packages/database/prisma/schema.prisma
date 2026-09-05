@@ -61,9 +61,12 @@ enum AuditOperation {
 
 model User {
   id                   String   @id @default(uuid()) @db.Uuid
-  githubId             String   @unique @map("github_id") @db.VarChar(64)
+  githubId             String?  @unique @map("github_id") @db.VarChar(64)
+  googleId             String?  @unique @map("google_id") @db.VarChar(128)
   username             String   @db.VarChar(128)
   email                String   @unique @db.VarChar(255)
+  passwordHash         String?  @map("password_hash") @db.Text
+  emailVerified        Boolean  @default(false) @map("email_verified")
   avatarUrl            String?  @map("avatar_url") @db.Text
   encryptedAccessToken String?  @map("encrypted_access_token") @db.Text
   accessTokenIv        String?  @map("access_token_iv") @db.VarChar(64)

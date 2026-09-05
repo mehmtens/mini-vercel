@@ -62,6 +62,11 @@ export interface AppConfig {
     callbackUrl: string;
     webhookSecret: string;
   };
+  google: {
+    clientId: string;
+    clientSecret: string;
+    callbackUrl: string;
+  };
   auth: {
     sessionSecret: string;
     devBypass: boolean;
@@ -100,7 +105,10 @@ const normalizedMasterKey = /^[0-9a-fA-F]{64}$/.test(rawMasterKey)
 
 const allowedOriginsEnv = process.env.CORS_ALLOWED_ORIGINS || process.env.ALLOWED_ORIGINS || '';
 const parsedAllowedOrigins = allowedOriginsEnv
-  ? allowedOriginsEnv.split(',').map((o) => o.trim()).filter(Boolean)
+  ? allowedOriginsEnv
+      .split(',')
+      .map((o) => o.trim())
+      .filter(Boolean)
   : [
       'http://localhost:3000',
       'http://localhost:8080',
@@ -111,7 +119,8 @@ const parsedAllowedOrigins = allowedOriginsEnv
     ];
 
 const baseDomain = process.env.BASE_DOMAIN || 'localhost';
-const appDomain = process.env.APP_DOMAIN || (baseDomain === 'localhost' ? 'app.localhost' : `app.${baseDomain}`);
+const appDomain =
+  process.env.APP_DOMAIN || (baseDomain === 'localhost' ? 'app.localhost' : `app.${baseDomain}`);
 
 export const config: AppConfig = {
   env: process.env.NODE_ENV || 'development',
@@ -159,14 +168,25 @@ export const config: AppConfig = {
   queue: {
     name: process.env.QUEUE_NAME || 'deployment-queue',
     concurrency: Number(process.env.QUEUE_CONCURRENCY || 5),
-    staleThresholdMs: Number(process.env.RECONCILIATION_STALE_THRESHOLD_MS || process.env.STALE_DEPLOYMENT_THRESHOLD_MS || 10 * 60 * 1000),
+    staleThresholdMs: Number(
+      process.env.RECONCILIATION_STALE_THRESHOLD_MS ||
+        process.env.STALE_DEPLOYMENT_THRESHOLD_MS ||
+        10 * 60 * 1000,
+    ),
     reconciliationLockTtlMs: Number(process.env.RECONCILIATION_LOCK_TTL_MS || 30 * 1000),
   },
   github: {
     clientId: process.env.GITHUB_CLIENT_ID || 'mock_github_client_id',
     clientSecret: process.env.GITHUB_CLIENT_SECRET || 'mock_github_client_secret',
-    callbackUrl: process.env.GITHUB_CALLBACK_URL || 'http://localhost:8080/api/auth/callback/github',
+    callbackUrl:
+      process.env.GITHUB_CALLBACK_URL || 'http://localhost:8080/api/auth/callback/github',
     webhookSecret: process.env.GITHUB_WEBHOOK_SECRET || DEFAULT_DEV_WEBHOOK_SECRET,
+  },
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID || '',
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+    callbackUrl:
+      process.env.GOOGLE_CALLBACK_URL || 'http://localhost:8080/api/auth/google/callback',
   },
   auth: {
     sessionSecret: process.env.SESSION_SECRET || DEFAULT_DEV_SESSION_SECRET,
@@ -196,7 +216,7 @@ export const config: AppConfig = {
 export function buildPreviewUrl(
   projectSlug: string,
   commitHash: string,
-  baseDomain: string = config.app.baseDomain
+  baseDomain: string = config.app.baseDomain,
 ): string {
   const normalizedDomain = baseDomain.trim().toLowerCase();
   const protocol = normalizedDomain === 'localhost' ? 'http' : 'https';
@@ -209,20 +229,26 @@ export function buildPreviewUrl(
 export function validateProductionSecrets(): void {
   if (config.isProduction) {
     if (!config.auth.sessionSecret || config.auth.sessionSecret.length < 32) {
-      throw new Error('SESSION_SECRET is required and must be at least 32 characters in production environment');
+      throw new Error(
+        'SESSION_SECRET is required and must be at least 32 characters in production environment',
+      );
     }
     if (process.env.DEV_AUTH_BYPASS === 'true') {
       throw new Error('DEV_AUTH_BYPASS is strictly prohibited in production environment');
     }
     if (process.env.NODE_ENV === 'production') {
       if (process.env.CRYPTO_MASTER_KEY === DEFAULT_DEV_MASTER_KEY) {
-        throw new Error('FATAL: In production, CRYPTO_MASTER_KEY must be explicitly set to a unique 64-character hex string.');
+        throw new Error(
+          'FATAL: In production, CRYPTO_MASTER_KEY must be explicitly set to a unique 64-character hex string.',
+        );
       }
       if (process.env.POSTGRES_PASSWORD === 'postgres') {
         throw new Error('FATAL: Default database password "postgres" is prohibited in production.');
       }
       if (process.env.GRAFANA_ADMIN_PASSWORD === 'admin') {
-        throw new Error('FATAL: Default Grafana admin password "admin" is prohibited in production.');
+        throw new Error(
+          'FATAL: Default Grafana admin password "admin" is prohibited in production.',
+        );
       }
     }
   }

@@ -4,6 +4,7 @@ import { config } from '@doplo/config';
 import { prisma } from '@doplo/database';
 import { authenticateRequest } from '../lib/auth';
 import { createSession, destroySession, storeUserGitHubToken } from '../lib/session';
+import { normalizeEmail } from '../lib/auth-utils';
 
 interface OAuthStateCookie {
   state: string;
@@ -72,7 +73,7 @@ export async function registerAuthRoutes(app: FastifyInstance) {
         error_description?: string;
       };
     }>,
-    reply: FastifyReply
+    reply: FastifyReply,
   ) => {
     const { code, state, error, error_description } = req.query;
 
@@ -220,23 +221,20 @@ export async function registerAuthRoutes(app: FastifyInstance) {
         githubUsername = ghUser.login;
         avatarUrl = ghUser.avatar_url || null;
 
-        // Fetch primary verified email if not public in profile
-        if (ghUser.email) {
-          githubEmail = ghUser.email;
-        } else {
-          const emailsRes = await fetch('https://api.github.com/user/emails', {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              'User-Agent': 'doplo-app',
-              Accept: 'application/vnd.github.v3+json',
-            },
-          });
-          const emails = (await emailsRes.json()) as any[];
-          const primaryEmail = Array.isArray(emails)
-            ? emails.find((e) => e.primary && e.verified)?.email || emails[0]?.email
-            : null;
-          githubEmail = primaryEmail || `${ghUser.login}@users.noreply.github.com`;
-        }
+        // Only trust a verified GitHub email when linking identities.
+        const emailsRes = await fetch('https://api.github.com/user/emails', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'User-Agent': 'doplo-app',
+            Accept: 'application/vnd.github.v3+json',
+          },
+        });
+        const emails = (await emailsRes.json()) as any[];
+        const verifiedEmail = Array.isArray(emails)
+          ? emails.find((e) => e.primary && e.verified)?.email ||
+            emails.find((e) => e.verified)?.email
+          : null;
+        githubEmail = verifiedEmail || `${ghUser.login}@users.noreply.github.com`;
       } catch (exchangeErr: any) {
         return reply.code(502).send({
           statusCode: 502,
@@ -246,20 +244,29 @@ export async function registerAuthRoutes(app: FastifyInstance) {
       }
     }
 
-    // Upsert user in database
-    const user = await prisma.user.upsert({
-      where: { githubId: githubUserId },
-      update: {
-        username: githubUsername,
-        avatarUrl,
-      },
-      create: {
-        githubId: githubUserId,
-        username: githubUsername,
-        email: githubEmail,
-        avatarUrl,
-      },
+    const normalizedEmail = normalizeEmail(githubEmail);
+    const existing = await prisma.user.findFirst({
+      where: { OR: [{ githubId: githubUserId }, { email: normalizedEmail }] },
     });
+    const user = existing
+      ? await prisma.user.update({
+          where: { id: existing.id },
+          data: {
+            githubId: githubUserId,
+            emailVerified: true,
+            username: githubUsername,
+            avatarUrl,
+          },
+        })
+      : await prisma.user.create({
+          data: {
+            githubId: githubUserId,
+            username: githubUsername,
+            email: normalizedEmail,
+            emailVerified: true,
+            avatarUrl,
+          },
+        });
 
     // Store encrypted access token in database
     await storeUserGitHubToken(user.id, accessToken);
@@ -355,7 +362,8 @@ export async function registerAuthRoutes(app: FastifyInstance) {
   for (const prefix of ['/api/auth', '/api/v1/auth']) {
     app.get(`${prefix}/github/login`, githubLoginHandler);
     app.get(`${prefix}/github/callback`, githubCallbackHandler);
+    app.get(`${prefix}/callback/github`, githubCallbackHandler);
     app.post(`${prefix}/logout`, logoutHandler);
     app.get(`${prefix}/me`, meHandler);
   }
-};
+}

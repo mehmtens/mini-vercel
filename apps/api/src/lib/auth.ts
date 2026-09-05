@@ -5,7 +5,7 @@ import { getSession } from './session';
 
 export interface AuthenticatedUser {
   id: string;
-  githubId: string;
+  githubId: string | null;
   username: string;
   email: string;
 }
@@ -16,7 +16,7 @@ export interface AuthenticatedUser {
  */
 export async function authenticateRequest(
   req: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ): Promise<AuthenticatedUser | null> {
   let user: User | null = null;
 
@@ -51,7 +51,9 @@ export async function authenticateRequest(
 
         // Check if bearerToken is directly a UUID or identifier
         if (!user) {
-          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bearerToken);
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+            bearerToken,
+          );
           if (isUuid) {
             user = await prisma.user.findUnique({ where: { id: bearerToken } });
           }
@@ -115,7 +117,8 @@ export async function authenticateRequest(
 
   // 4. Check Query Parameter Token (Useful for EventSource / SSE in browsers)
   if (!user) {
-    const queryToken = (req.query as any)?.token || (req.query as any)?.access_token || (req.query as any)?.auth;
+    const queryToken =
+      (req.query as any)?.token || (req.query as any)?.access_token || (req.query as any)?.auth;
     if (typeof queryToken === 'string' && queryToken.trim()) {
       const token = queryToken.trim();
       const session = await getSession(token);
@@ -123,7 +126,9 @@ export async function authenticateRequest(
         user = await prisma.user.findUnique({ where: { id: session.userId } });
       }
       if (!user) {
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(token);
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          token,
+        );
         if (isUuid) {
           user = await prisma.user.findUnique({ where: { id: token } });
         }

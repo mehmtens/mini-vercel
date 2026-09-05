@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Navbar } from '../components/Navbar';
+import { AuthGate } from '../components/AuthGate';
 
 export const metadata: Metadata = {
   title: 'Doplo | Push. Build. Live.',
-  description: 'Deploy static web apps from GitHub with live build logs, preview URLs, and instant rollbacks.',
+  description:
+    'Deploy static web apps from GitHub with live build logs, preview URLs, and instant rollbacks.',
 };
 
 export default function RootLayout({
@@ -15,16 +17,18 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="min-h-screen bg-[#08090a] text-[#ededed] antialiased selection:bg-blue-600 selection:text-white flex flex-col">
-        <Navbar />
-        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {children}
-        </main>
-        <footer className="w-full border-t border-white/[0.06] py-6 text-center text-xs text-zinc-500">
-          <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <span>Doplo • Push. Build. Live.</span>
-            <span>Version 1.0.0-MVP</span>
-          </div>
-        </footer>
+        <AuthGate>
+          <Navbar />
+          <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {children}
+          </main>
+          <footer className="w-full border-t border-white/[0.06] py-6 text-center text-xs text-zinc-500">
+            <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+              <span>Doplo • Push. Build. Live.</span>
+              <span>Version 1.0.0-MVP</span>
+            </div>
+          </footer>
+        </AuthGate>
       </body>
     </html>
   );

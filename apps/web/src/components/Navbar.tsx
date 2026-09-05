@@ -2,24 +2,34 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Plus } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { LogOut, Plus } from 'lucide-react';
 import { api } from '../lib/api';
 
 export function Navbar() {
   const pathname = usePathname();
-  const [healthStatus, setHealthStatus] = useState<'healthy' | 'degraded' | 'unhealthy' | 'checking'>('checking');
+  const router = useRouter();
+  const [healthStatus, setHealthStatus] = useState<
+    'healthy' | 'degraded' | 'unhealthy' | 'checking'
+  >('checking');
+  const [username, setUsername] = useState('');
 
   useEffect(() => {
     async function check() {
       try {
         const res = await api.getHealth();
-        setHealthStatus(res.status === 'ok' ? 'healthy' : res.status === 'degraded' ? 'degraded' : 'unhealthy');
+        setHealthStatus(
+          res.status === 'ok' ? 'healthy' : res.status === 'degraded' ? 'degraded' : 'unhealthy',
+        );
       } catch {
         setHealthStatus('unhealthy');
       }
     }
     check();
+    api
+      .getCurrentUser()
+      .then((user) => setUsername(user?.username || ''))
+      .catch(() => undefined);
     const interval = setInterval(check, 15000);
     return () => clearInterval(interval);
   }, []);
@@ -29,6 +39,8 @@ export function Navbar() {
     { name: 'Deployments', href: '/#activity' },
   ];
 
+  if (pathname === '/login') return null;
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/[0.08] bg-[#08090a]/80 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -36,7 +48,9 @@ export function Navbar() {
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform duration-200">
-              <span className="text-white font-black text-base tracking-[-0.12em] pr-[0.12em]">D</span>
+              <span className="text-white font-black text-base tracking-[-0.12em] pr-[0.12em]">
+                D
+              </span>
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-base tracking-tight text-white flex items-center gap-1.5">
@@ -71,6 +85,7 @@ export function Navbar() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-3">
+          {username && <span className="hidden text-sm text-zinc-400 lg:inline">{username}</span>}
           {/* Health Status Indicator */}
           <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs">
             <span
@@ -78,8 +93,8 @@ export function Navbar() {
                 healthStatus === 'healthy'
                   ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)] animate-pulse'
                   : healthStatus === 'degraded'
-                  ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]'
-                  : 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]'
+                    ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]'
+                    : 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]'
               }`}
             />
             <span className="text-zinc-400 font-mono capitalize">
@@ -95,6 +110,19 @@ export function Navbar() {
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>New Project</span>
           </Link>
+          <button
+            type="button"
+            title="Sign out"
+            aria-label="Sign out"
+            onClick={async () => {
+              await api.logout();
+              router.replace('/login');
+              router.refresh();
+            }}
+            className="grid h-9 w-9 place-items-center rounded-lg border border-white/10 text-zinc-400 transition hover:bg-white/[0.06] hover:text-white"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
       </div>
     </header>
