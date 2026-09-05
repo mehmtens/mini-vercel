@@ -44,12 +44,12 @@ jobs:
 
     env:
       NODE_ENV: test
-      CI: "true"
+      CI: 'true'
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5435/doplo
       REDIS_URL: redis://127.0.0.1:6379
       MINIO_ENDPOINT: 127.0.0.1
-      MINIO_PORT: "9000"
-      MINIO_USE_SSL: "false"
+      MINIO_PORT: '9000'
+      MINIO_USE_SSL: 'false'
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
       MINIO_BUCKET_BUILDS: doplo-builds
@@ -90,7 +90,7 @@ jobs:
           BASE_DOMAIN: ci.example.com
           APP_DOMAIN: app.ci.example.com
           ACME_EMAIL: ci@example.com
-          DOCKER_GID: "999"
+          DOCKER_GID: '999'
           POSTGRES_USER: doplo_ci
           POSTGRES_PASSWORD: ci-database-password-with-32-characters
           POSTGRES_DB: doplo_ci
@@ -103,10 +103,12 @@ jobs:
           GITHUB_CLIENT_SECRET: ci-github-client-secret-with-32-characters
           GITHUB_CALLBACK_URL: https://app.ci.example.com/api/auth/callback/github
           GITHUB_WEBHOOK_SECRET: ci-webhook-secret-with-at-least-32-characters
+          CLOUDFLARE_TUNNEL_TOKEN: ci-validation-token
         run: |
           CRYPTO_MASTER_KEY="$(printf '01%.0s' {1..32})"
           export CRYPTO_MASTER_KEY
           docker compose -f deploy/docker-compose.production.yml config --quiet
+          docker compose -f docker-compose.yml -f deploy/docker-compose.tunnel.yml config --quiet
           docker run --rm \
             -e APP_DOMAIN -e BASE_DOMAIN -e ACME_EMAIL \
             -v "$PWD/deploy/caddy/Caddyfile.prod:/etc/caddy/Caddyfile:ro" \
@@ -115,6 +117,7 @@ jobs:
             echo "Unsafe production template unexpectedly passed preflight"
             exit 1
           fi
+          pnpm test:production-preflight
 
       - name: Start MinIO Server (Pinned Release)
         run: |

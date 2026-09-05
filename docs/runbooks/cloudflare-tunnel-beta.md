@@ -22,7 +22,9 @@ project hostnames to the artifact gateway.
 3. Store the tunnel token as `CLOUDFLARE_TUNNEL_TOKEN` in the ignored `.env` file.
 4. Configure real GitHub OAuth credentials for callback URL
    `https://doplo.dev/api/auth/callback/github`.
-5. Start the beta stack:
+5. Run `pnpm production:preflight` and resolve every reported weak or missing
+   credential before publishing the connector.
+6. Start the beta stack:
 
    ```bash
    docker compose -f docker-compose.yml -f deploy/docker-compose.tunnel.yml up -d --build

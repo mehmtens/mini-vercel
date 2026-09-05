@@ -18,11 +18,24 @@ for (const rawLine of readFileSync(envPath, 'utf8').split(/\r?\n/)) {
 }
 
 const required = [
-  'NODE_ENV', 'BASE_DOMAIN', 'APP_DOMAIN', 'ACME_EMAIL', 'DOCKER_GID',
-  'POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_DB', 'REDIS_PASSWORD',
-  'MINIO_ROOT_USER', 'MINIO_ROOT_PASSWORD', 'MINIO_BUCKET_BUILDS',
-  'CRYPTO_MASTER_KEY', 'SESSION_SECRET', 'GITHUB_CLIENT_ID',
-  'GITHUB_CLIENT_SECRET', 'GITHUB_CALLBACK_URL', 'GITHUB_WEBHOOK_SECRET',
+  'NODE_ENV',
+  'BASE_DOMAIN',
+  'APP_DOMAIN',
+  'ACME_EMAIL',
+  'DOCKER_GID',
+  'POSTGRES_USER',
+  'POSTGRES_PASSWORD',
+  'POSTGRES_DB',
+  'REDIS_PASSWORD',
+  'MINIO_ROOT_USER',
+  'MINIO_ROOT_PASSWORD',
+  'MINIO_BUCKET_BUILDS',
+  'CRYPTO_MASTER_KEY',
+  'SESSION_SECRET',
+  'GITHUB_CLIENT_ID',
+  'GITHUB_CLIENT_SECRET',
+  'GITHUB_CALLBACK_URL',
+  'GITHUB_WEBHOOK_SECRET',
 ];
 
 const errors = [];
@@ -30,7 +43,8 @@ for (const key of required) {
   if (!values[key]) errors.push(`${key} is required`);
 }
 
-const placeholderPattern = /(yourdomain|your[_-]|generate[_-]|change[_-]?me|example\.com|minio_admin_user)/i;
+const placeholderPattern =
+  /(yourdomain|your[_-]|generate[_-]|change[_-]?me|example\.com|minio_admin_user)/i;
 for (const key of required) {
   if (values[key] && placeholderPattern.test(values[key])) {
     errors.push(`${key} still contains a template placeholder`);
@@ -47,7 +61,14 @@ if (!/^[0-9a-f]{64}$/i.test(values.CRYPTO_MASTER_KEY || '')) {
   errors.push('CRYPTO_MASTER_KEY must be exactly 64 hexadecimal characters');
 }
 
-for (const key of ['SESSION_SECRET', 'POSTGRES_PASSWORD', 'REDIS_PASSWORD', 'MINIO_ROOT_PASSWORD', 'GITHUB_CLIENT_SECRET', 'GITHUB_WEBHOOK_SECRET']) {
+for (const key of [
+  'SESSION_SECRET',
+  'POSTGRES_PASSWORD',
+  'REDIS_PASSWORD',
+  'MINIO_ROOT_PASSWORD',
+  'GITHUB_CLIENT_SECRET',
+  'GITHUB_WEBHOOK_SECRET',
+]) {
   if ((values[key] || '').length < 32) errors.push(`${key} must be at least 32 characters`);
 }
 
@@ -65,11 +86,17 @@ for (const key of ['POSTGRES_USER', 'POSTGRES_DB']) {
 
 const domainPattern = /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i;
 for (const key of ['BASE_DOMAIN', 'APP_DOMAIN']) {
-  if (values[key] && !domainPattern.test(values[key])) errors.push(`${key} must be a valid hostname`);
+  if (values[key] && !domainPattern.test(values[key]))
+    errors.push(`${key} must be a valid hostname`);
 }
 
-if (values.BASE_DOMAIN && values.APP_DOMAIN && !values.APP_DOMAIN.endsWith(`.${values.BASE_DOMAIN}`)) {
-  errors.push('APP_DOMAIN must be a subdomain of BASE_DOMAIN');
+if (
+  values.BASE_DOMAIN &&
+  values.APP_DOMAIN &&
+  values.APP_DOMAIN !== values.BASE_DOMAIN &&
+  !values.APP_DOMAIN.endsWith(`.${values.BASE_DOMAIN}`)
+) {
+  errors.push('APP_DOMAIN must equal BASE_DOMAIN or be one of its subdomains');
 }
 const expectedCallback = values.APP_DOMAIN
   ? `https://${values.APP_DOMAIN}/api/auth/callback/github`

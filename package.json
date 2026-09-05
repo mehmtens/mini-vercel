@@ -23,7 +23,8 @@
     "docker:down": "docker compose -f deploy/docker-compose.yml down",
     "docker:logs": "docker compose -f deploy/docker-compose.yml logs -f",
     "docker:config": "docker compose -f deploy/docker-compose.yml config",
-    "production:preflight": "node scripts/production-preflight.mjs"
+    "production:preflight": "node scripts/production-preflight.mjs",
+    "test:production-preflight": "node --test scripts/production-preflight.test.mjs"
   },
   "devDependencies": {
     "@types/node": "^20.17.0",
