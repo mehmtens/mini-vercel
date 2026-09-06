@@ -17,6 +17,18 @@ export async function registerAuthRoutes(app: FastifyInstance) {
   // 1. GET /api/auth/github/login
   // ----------------------------------------------------
   const githubLoginHandler = async (req: FastifyRequest, reply: FastifyReply) => {
+    if (
+      !config.github.clientId ||
+      !config.github.clientSecret ||
+      /^(mock_|your_)/i.test(config.github.clientId) ||
+      /^(mock_|your_)/i.test(config.github.clientSecret)
+    ) {
+      return reply.code(503).send({
+        statusCode: 503,
+        error: 'Service Unavailable',
+        message: 'GitHub sign-in is not configured yet.',
+      });
+    }
     // Generate high-entropy state & PKCE parameters
     const state = crypto.randomBytes(32).toString('hex');
     const codeVerifier = crypto.randomBytes(32).toString('base64url');
@@ -41,7 +53,8 @@ export async function registerAuthRoutes(app: FastifyInstance) {
     const params = new URLSearchParams({
       client_id: config.github.clientId,
       redirect_uri: config.github.callbackUrl,
-      scope: 'read:user,user:email',
+      // `repo` is required for private repository listing and cloning after sign-in.
+      scope: 'read:user,user:email,repo',
       state,
       code_challenge: codeChallenge,
       code_challenge_method: 'S256',

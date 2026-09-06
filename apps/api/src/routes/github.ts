@@ -280,8 +280,8 @@ export async function registerGitHubRoutes(app: FastifyInstance) {
 
     const token = await getUserGitHubToken(authUser.id);
 
-    // If in test environment or if user has mock token, provide mock authorized repository payload
-    if (config.env === 'test' || !token || token.startsWith('gho_mock_')) {
+    // Keep fixtures strictly inside tests. Production must never show fake repositories.
+    if (config.env === 'test') {
       const mockRepos = [
         {
           id: 101,
@@ -311,6 +311,14 @@ export async function registerGitHubRoutes(app: FastifyInstance) {
         per_page: perPage,
         total: mockRepos.length,
         data: mockRepos,
+      });
+    }
+
+    if (!token || token.startsWith('gho_mock_')) {
+      return reply.code(401).send({
+        statusCode: 401,
+        error: 'Unauthorized',
+        message: 'Connect GitHub first to browse your repositories.',
       });
     }
 
@@ -419,8 +427,8 @@ export async function registerGitHubRoutes(app: FastifyInstance) {
 
     const token = await getUserGitHubToken(authUser.id);
 
-    // Mock response for test environment
-    if (config.env === 'test' || !token || token.startsWith('gho_mock_')) {
+    // Mock response for test environment only
+    if (config.env === 'test') {
       const mockBranches = [
         { name: 'main', commit: { sha: '8a9b0c1e2f3a' }, protected: false },
         { name: 'staging', commit: { sha: 'd3e4f5a6b7c8' }, protected: false },
@@ -432,6 +440,14 @@ export async function registerGitHubRoutes(app: FastifyInstance) {
         page,
         per_page: perPage,
         data: mockBranches,
+      });
+    }
+
+    if (!token || token.startsWith('gho_mock_')) {
+      return reply.code(401).send({
+        statusCode: 401,
+        error: 'Unauthorized',
+        message: 'Connect GitHub first to browse repository branches.',
       });
     }
 

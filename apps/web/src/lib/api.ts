@@ -134,6 +134,17 @@ export interface AuthUser {
   avatarUrl?: string | null;
 }
 
+export interface GithubRepository {
+  id: number;
+  name: string;
+  full_name: string;
+  private: boolean;
+  html_url: string;
+  default_branch: string;
+  description?: string | null;
+  updated_at?: string;
+}
+
 export const api = {
   async getCurrentUser(): Promise<AuthUser | null> {
     try {
@@ -151,6 +162,11 @@ export const api = {
       providers: { email: boolean; github: boolean; google: boolean };
     }>('/api/auth/providers');
     return res.providers;
+  },
+
+  async getGithubRepos(): Promise<GithubRepository[]> {
+    const res = await fetchJson<{ success: boolean; data: GithubRepository[] }>('/api/github/repos?per_page=100');
+    return res.data || [];
   },
 
   async register(data: { email: string; password: string; name: string }): Promise<{ verificationRequired?: boolean }> {

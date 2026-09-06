@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -15,7 +15,7 @@ import {
   FolderTree,
   Sparkles,
 } from 'lucide-react';
-import { api } from '../../lib/api';
+import { api, ApiError, GithubRepository } from '../../lib/api';
 import { projectHostname } from '../../lib/urls';
 
 interface EnvVarRow {
@@ -81,6 +81,42 @@ export default function NewProjectPage() {
   const [buildCommand, setBuildCommand] = useState('npm run build');
   const [outputDirectory, setOutputDirectory] = useState('dist');
   const [installCommand, setInstallCommand] = useState('npm install');
+  const [githubRepos, setGithubRepos] = useState<GithubRepository[]>([]);
+  const [reposLoading, setReposLoading] = useState(true);
+  const [githubConnected, setGithubConnected] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const repos = await api.getGithubRepos();
+        if (!cancelled) {
+          setGithubRepos(repos);
+          setGithubConnected(true);
+        }
+      } catch (value) {
+        if (!cancelled && value instanceof ApiError && value.status === 401) setGithubConnected(false);
+      } finally {
+        if (!cancelled) setReposLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const connectGithub = () => {
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
+    window.location.href = `${apiBase}/api/auth/github/login`;
+  };
+
+  const selectGithubRepo = (fullName: string) => {
+    const selected = githubRepos.find((repo) => repo.full_name === fullName);
+    if (!selected) return;
+    setRepoUrl(selected.html_url);
+    setName(selected.name);
+    setBranch(selected.default_branch || 'main');
+  };
 
   // Environment Variables
   const [envVars, setEnvVars] = useState<EnvVarRow[]>([
@@ -237,11 +273,36 @@ export default function NewProjectPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-zinc-300">GitHub Repository URL</label>
+            <div className="flex items-center justify-between gap-3">
+              <label className="text-xs font-semibold text-zinc-300">GitHub Repository</label>
+              {!githubConnected && !reposLoading && (
+                <button
+                  type="button"
+                  onClick={connectGithub}
+                  className="text-xs font-semibold text-blue-400 hover:text-blue-300"
+                >
+                  Connect GitHub to browse repos
+                </button>
+              )}
+            </div>
+            {githubConnected && githubRepos.length > 0 && (
+              <select
+                value={githubRepos.find((repo) => repo.html_url === repoUrl)?.full_name || ''}
+                onChange={(event) => selectGithubRepo(event.target.value)}
+                className="w-full px-3.5 py-2 rounded-xl bg-[#12141a] border border-white/[0.08] text-sm text-white focus:outline-none focus:border-blue-500 font-medium"
+              >
+                <option value="">Select a connected repository</option>
+                {githubRepos.map((repo) => (
+                  <option key={repo.id} value={repo.full_name}>
+                    {repo.full_name}{repo.private ? ' · private' : ''}
+                  </option>
+                ))}
+              </select>
+            )}
             <input
               type="url"
               required
-              placeholder="https://github.com/username/repository"
+              placeholder="or paste https://github.com/username/repository"
               value={repoUrl}
               onChange={(e) => setRepoUrl(e.target.value)}
               className="w-full px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-mono"
