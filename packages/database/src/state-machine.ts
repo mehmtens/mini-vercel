@@ -1,18 +1,4 @@
-import type { PrismaClient } from '@prisma/client';
-
-export type DeploymentStatus =
-  | 'QUEUED'
-  | 'INITIALIZING'
-  | 'CLONING'
-  | 'BUILDING'
-  | 'UPLOADING'
-  | 'DEPLOYING'
-  | 'READY'
-  | 'FAILED'
-  | 'CANCELLED';
-
-export type LogStream = 'STDOUT' | 'STDERR';
-export type Deployment = any;
+import type { PrismaClient, DeploymentStatus } from '@prisma/client';
 
 export class InvalidStateTransitionError extends Error {
   constructor(message: string) {
