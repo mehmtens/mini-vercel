@@ -1,4 +1,4 @@
-import type { PrismaClient, DeploymentStatus } from '@prisma/client';
+import type { PrismaClient, DeploymentStatus, LogStream } from '@prisma/client';
 
 export class InvalidStateTransitionError extends Error {
   constructor(message: string) {
@@ -39,6 +39,7 @@ export interface TransitionOptions {
   errorMessage?: string | null;
   s3Prefix?: string | null;
   logMessage?: string | null;
+  logStream?: LogStream;
 }
 
 export async function transitionDeploymentState(
@@ -136,7 +137,7 @@ export async function transitionDeploymentState(
         data: {
           deploymentId: opts.deploymentId,
           logChunk: opts.logMessage,
-          stream: 'STDOUT',
+          stream: opts.logStream ?? 'STDOUT',
           sequence: logCount + 1,
         },
       });
