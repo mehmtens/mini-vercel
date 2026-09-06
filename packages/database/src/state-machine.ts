@@ -1,172 +1,159 @@
-import { PrismaClient, DeploymentStatus, Deployment, LogStream } from '@prisma/client';
-import {
-  ALLOWED_STATE_TRANSITIONS,
-  InvalidStateTransitionError,
-  isValidTransition,
-  isTerminalStatus,
-} from '@doplo/types';
+import type { PrismaClient } from '@prisma/client';
 
-export {
-  ALLOWED_STATE_TRANSITIONS,
-  InvalidStateTransitionError,
-  isValidTransition,
-  isTerminalStatus,
+export type DeploymentStatus =
+  | 'QUEUED'
+  | 'INITIALIZING'
+  | 'CLONING'
+  | 'BUILDING'
+  | 'UPLOADING'
+  | 'DEPLOYING'
+  | 'READY'
+  | 'FAILED'
+  | 'CANCELLED';
+
+export type LogStream = 'STDOUT' | 'STDERR';
+export type Deployment = any;
+
+export class InvalidStateTransitionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'InvalidStateTransitionError';
+  }
+}
+
+export const ALLOWED_STATE_TRANSITIONS: Record<DeploymentStatus, DeploymentStatus[]> = {
+  QUEUED: ['INITIALIZING', 'CANCELLED'],
+  INITIALIZING: ['CLONING', 'FAILED', 'CANCELLED'],
+  CLONING: ['BUILDING', 'FAILED', 'CANCELLED'],
+  BUILDING: ['UPLOADING', 'FAILED', 'CANCELLED'],
+  UPLOADING: ['DEPLOYING', 'FAILED', 'CANCELLED'],
+  DEPLOYING: ['READY', 'FAILED', 'CANCELLED'],
+  READY: [],
+  FAILED: [],
+  CANCELLED: [],
 };
 
-export interface TransitionStateOptions {
+export function isValidTransition(from: DeploymentStatus, to: DeploymentStatus): boolean {
+  if (from === to) return true;
+  const allowed = ALLOWED_STATE_TRANSITIONS[from];
+  return allowed ? allowed.includes(to) : false;
+}
+
+export function isTerminalStatus(status: DeploymentStatus): boolean {
+  return ['READY', 'FAILED', 'CANCELLED'].includes(status);
+}
+
+export interface TransitionOptions {
   deploymentId: string;
   toStatus: DeploymentStatus;
-  expectedStatus?: DeploymentStatus | DeploymentStatus[];
+  expectedStatus?: DeploymentStatus;
   eventMessage?: string;
   previewUrl?: string | null;
-  s3Prefix?: string | null;
   buildDurationMs?: number | null;
   errorMessage?: string | null;
-  logMessage?: string;
-  logStream?: LogStream;
+  s3Prefix?: string | null;
+  logMessage?: string | null;
 }
 
-export interface TransitionStateResult {
-  success: boolean;
-  deployment?: Deployment;
-  fromStatus?: DeploymentStatus;
-  toStatus: DeploymentStatus;
-  skippedDueToTerminal?: boolean;
-  error?: string;
-}
-
-const isUuid = (str: string) =>
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
-
-/**
- * Atomically transitions a deployment status and creates a lifecycle event
- * in a single Prisma database transaction with optimistic concurrency.
- */
 export async function transitionDeploymentState(
   prisma: PrismaClient,
-  options: TransitionStateOptions
-): Promise<TransitionStateResult> {
-  const { deploymentId, toStatus, expectedStatus } = options;
-
-  if (!isUuid(deploymentId)) {
-    return {
-      success: false,
-      toStatus,
-      error: `Invalid deployment ID format (UUID expected): "${deploymentId}"`,
-    };
-  }
-
-  return await prisma.$transaction(async (tx) => {
-    // 1. Fetch current deployment state
-    const current = await tx.deployment.findUnique({
-      where: { id: deploymentId },
-      select: {
-        id: true,
-        status: true,
-        projectId: true,
-      },
+  opts: TransitionOptions
+): Promise<{
+  success: boolean;
+  fromStatus?: DeploymentStatus;
+  toStatus?: DeploymentStatus;
+  skippedDueToTerminal?: boolean;
+  error?: string;
+}> {
+  return await (prisma as any).$transaction(async (tx: any) => {
+    const deployment = await tx.deployment.findUnique({
+      where: { id: opts.deploymentId },
+      include: { project: true },
     });
 
-    if (!current) {
-      return {
-        success: false,
-        toStatus,
-        error: `Deployment not found: "${deploymentId}"`,
-      };
+    if (!deployment) {
+      throw new Error(`Deployment ${opts.deploymentId} not found`);
     }
 
-    const currentStatus = current.status;
+    const currentStatus = deployment.status as DeploymentStatus;
 
-    // 2. Handle Terminal State Idempotency
     if (isTerminalStatus(currentStatus)) {
-      if (currentStatus === toStatus) {
-        return {
-          success: true,
-          fromStatus: currentStatus,
-          toStatus,
-          skippedDueToTerminal: true,
-        };
+      if (currentStatus === opts.toStatus) {
+        return { success: true, fromStatus: currentStatus, toStatus: opts.toStatus, skippedDueToTerminal: true };
       }
       return {
         success: false,
         fromStatus: currentStatus,
-        toStatus,
+        toStatus: opts.toStatus,
         skippedDueToTerminal: true,
-        error: `Deployment "${deploymentId}" is already in terminal state "${currentStatus}". Cannot transition to "${toStatus}".`,
+        error: `Deployment is already in terminal state: ${currentStatus}`,
       };
     }
 
-    // 3. Optimistic Concurrency Check (if expectedStatus was specified)
-    if (expectedStatus) {
-      const allowedExpected = Array.isArray(expectedStatus) ? expectedStatus : [expectedStatus];
-      if (!allowedExpected.includes(currentStatus)) {
-        return {
-          success: false,
-          fromStatus: currentStatus,
-          toStatus,
-          error: `Optimistic concurrency conflict: expected status [${allowedExpected.join(
-            ', '
-          )}] but current status is "${currentStatus}".`,
-        };
-      }
+    if (opts.expectedStatus && currentStatus !== opts.expectedStatus) {
+      return {
+        success: false,
+        fromStatus: currentStatus,
+        toStatus: opts.toStatus,
+        error: `Optimistic concurrency conflict: Expected ${opts.expectedStatus} but found ${currentStatus}`,
+      };
     }
 
-    // 4. Validate state transition according to state machine rules
-    if (!isValidTransition(currentStatus, toStatus)) {
-      throw new InvalidStateTransitionError(deploymentId, currentStatus, toStatus);
+    if (!isValidTransition(currentStatus, opts.toStatus)) {
+      throw new InvalidStateTransitionError(
+        `Invalid deployment state transition from ${currentStatus} to ${opts.toStatus}`
+      );
     }
 
-    // 5. Execute atomic update
-    const updated = await tx.deployment.update({
-      where: { id: deploymentId },
-      data: {
-        status: toStatus,
-        previewUrl: options.previewUrl !== undefined ? options.previewUrl : undefined,
-        s3Prefix: options.s3Prefix !== undefined ? options.s3Prefix : undefined,
-        buildDurationMs: options.buildDurationMs !== undefined ? options.buildDurationMs : undefined,
-        errorMessage: options.errorMessage !== undefined ? options.errorMessage : undefined,
-      },
+    const updateData: any = {
+      status: opts.toStatus,
+      updatedAt: new Date(),
+    };
+
+    if (opts.previewUrl !== undefined) updateData.previewUrl = opts.previewUrl;
+    if (opts.buildDurationMs !== undefined) updateData.buildDurationMs = opts.buildDurationMs;
+    if (opts.errorMessage !== undefined) updateData.errorMessage = opts.errorMessage;
+    if (opts.s3Prefix !== undefined) updateData.s3Prefix = opts.s3Prefix;
+
+    await tx.deployment.update({
+      where: { id: opts.deploymentId },
+      data: updateData,
     });
 
-    // 6. Record lifecycle event in the same transaction
     await tx.deploymentEvent.create({
       data: {
-        deploymentId,
+        deploymentId: opts.deploymentId,
         fromStatus: currentStatus,
-        toStatus,
-        eventMessage:
-          options.eventMessage ||
-          options.errorMessage ||
-          `Status transitioned from ${currentStatus} to ${toStatus}`,
+        toStatus: opts.toStatus,
+        eventMessage: opts.eventMessage || `Transitioned to ${opts.toStatus}`,
       },
     });
 
-    // 7. If optional log message provided, write to deployment logs
-    if (options.logMessage) {
-      const logCount = await tx.deploymentLog.count({ where: { deploymentId } });
-      await tx.deploymentLog.create({
-        data: {
-          deploymentId,
-          sequence: logCount + 1,
-          stream: options.logStream || (toStatus === 'FAILED' ? LogStream.STDERR : LogStream.STDOUT),
-          logChunk: options.logMessage,
-        },
+    if (opts.toStatus === 'READY') {
+      await tx.project.update({
+        where: { id: deployment.projectId },
+        data: { currentDeploymentId: deployment.id },
       });
     }
 
-    // 8. If READY, update currentDeploymentId on the associated project
-    if (toStatus === 'READY' && current.projectId) {
-      await tx.project.update({
-        where: { id: current.projectId },
-        data: { currentDeploymentId: deploymentId },
+    if (opts.logMessage) {
+      const logCount = await tx.deploymentLog.count({
+        where: { deploymentId: opts.deploymentId },
+      });
+      await tx.deploymentLog.create({
+        data: {
+          deploymentId: opts.deploymentId,
+          logChunk: opts.logMessage,
+          stream: 'STDOUT',
+          sequence: logCount + 1,
+        },
       });
     }
 
     return {
       success: true,
-      deployment: updated,
       fromStatus: currentStatus,
-      toStatus,
+      toStatus: opts.toStatus,
     };
   });
 }
