@@ -166,7 +166,7 @@ describe('Deployment State Machine & Atomic Transitions', () => {
         orderBy: { timestamp: 'asc' },
       });
       expect(events.length).toBe(6);
-      expect(events.map((e) => e.toStatus)).toEqual([
+      expect(events.map((e: any) => e.toStatus)).toEqual([
         'INITIALIZING',
         'CLONING',
         'BUILDING',
