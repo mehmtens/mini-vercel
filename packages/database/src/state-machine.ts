@@ -32,7 +32,7 @@ export function isTerminalStatus(status: DeploymentStatus): boolean {
 export interface TransitionOptions {
   deploymentId: string;
   toStatus: DeploymentStatus;
-  expectedStatus?: DeploymentStatus;
+  expectedStatus?: DeploymentStatus | DeploymentStatus[];
   eventMessage?: string;
   previewUrl?: string | null;
   buildDurationMs?: number | null;
@@ -76,13 +76,19 @@ export async function transitionDeploymentState(
       };
     }
 
-    if (opts.expectedStatus && currentStatus !== opts.expectedStatus) {
-      return {
-        success: false,
-        fromStatus: currentStatus,
-        toStatus: opts.toStatus,
-        error: `Optimistic concurrency conflict: Expected ${opts.expectedStatus} but found ${currentStatus}`,
-      };
+    if (opts.expectedStatus) {
+      const expected = Array.isArray(opts.expectedStatus)
+        ? opts.expectedStatus
+        : [opts.expectedStatus];
+
+      if (!expected.includes(currentStatus)) {
+        return {
+          success: false,
+          fromStatus: currentStatus,
+          toStatus: opts.toStatus,
+          error: `Optimistic concurrency conflict: Expected ${expected.join(' | ')} but found ${currentStatus}`,
+        };
+      }
     }
 
     if (!isValidTransition(currentStatus, opts.toStatus)) {
