@@ -77,7 +77,7 @@ export class Database {
       });
 
       const status_counts: Record<string, number> = {};
-      grouped.forEach((g) => {
+      grouped.forEach((g: any) => {
         status_counts[g.status] = g._count.status;
       });
 
