@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { config } from '@doplo/config';
 import { prisma } from '@doplo/database';
+import { consumeVerification, mailConfigured, sendVerification } from '../lib/email-verification';
 import {
   hashPassword,
   isValidEmail,
@@ -55,11 +56,16 @@ export async function registerPasswordAuthRoutes(app: FastifyInstance) {
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
+      if (!existing.emailVerified && existing.passwordHash && await verifyPassword(password, existing.passwordHash)) {
+        await sendVerification(existing);
+        return reply.code(202).send({ success: true, verificationRequired: true });
+      }
       return reply.code(409).send({
         message: 'An account already exists for this email. Sign in with its original method.',
       });
     }
 
+    if (!mailConfigured()) return reply.code(503).send({ message: 'Email registration is temporarily unavailable. Please try again later.' });
     const passwordHash = await hashPassword(password);
     const user = await prisma.user.create({
       data: {
@@ -70,8 +76,8 @@ export async function registerPasswordAuthRoutes(app: FastifyInstance) {
       },
     });
 
-    await issueSessionCookie(reply, user);
-    return reply.code(201).send({ success: true, user: publicUser(user) });
+    await sendVerification(user);
+    return reply.code(201).send({ success: true, verificationRequired: true });
   };
 
   const loginHandler = async (
@@ -85,6 +91,11 @@ export async function registerPasswordAuthRoutes(app: FastifyInstance) {
 
     if (!user || !valid) {
       return reply.code(401).send({ message: 'Invalid email or password.' });
+    }
+
+    if (!user.emailVerified) {
+      await sendVerification(user);
+      return reply.code(202).send({ success: true, verificationRequired: true });
     }
 
     await issueSessionCookie(reply, user);
@@ -104,6 +115,10 @@ export async function registerPasswordAuthRoutes(app: FastifyInstance) {
   });
 
   for (const prefix of ['/api/auth', '/api/v1/auth']) {
+    app.post<{ Body: { token?: unknown } }>(`${prefix}/verify-email`, authRateLimit, async (req, reply) => {
+      if (!await consumeVerification(req.body?.token)) return reply.code(400).send({ message: 'Verification link is invalid or expired. Sign in to request another.' });
+      return { success: true };
+    });
     app.post(`${prefix}/register`, authRateLimit, registerHandler);
     app.post(`${prefix}/login`, authRateLimit, loginHandler);
     app.get(`${prefix}/providers`, providersHandler);

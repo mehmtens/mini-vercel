@@ -50,7 +50,7 @@ export async function authenticateRequest(
         }
 
         // Check if bearerToken is directly a UUID or identifier
-        if (!user) {
+        if (!user && !config.isProduction) {
           const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
             bearerToken,
           );
@@ -125,7 +125,7 @@ export async function authenticateRequest(
       if (session?.userId) {
         user = await prisma.user.findUnique({ where: { id: session.userId } });
       }
-      if (!user) {
+      if (!user && !config.isProduction) {
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
           token,
         );
@@ -142,6 +142,11 @@ export async function authenticateRequest(
       error: 'Unauthorized',
       message: 'Authentication required. Please log in or provide valid credentials.',
     });
+    return null;
+  }
+
+  if (config.isProduction && !user.emailVerified) {
+    reply.code(403).send({ code: 'EMAIL_NOT_VERIFIED', message: 'Verify your email before continuing.' });
     return null;
   }
 

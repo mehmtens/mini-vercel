@@ -134,6 +134,9 @@ export class GitCloner {
     if (!GitCloner.isValidRepoUrl(repoUrl)) {
       throw new InvalidRepoUrlError(repoUrl);
     }
+    if (process.env.NODE_ENV === 'production' && !/^https:\/\/github\.com\/[\w.-]+\/[\w.-]+(?:\.git)?\/?$/.test(repoUrl)) {
+      throw new InvalidRepoUrlError(repoUrl);
+    }
 
     if (!fs.existsSync(targetDir)) {
       fs.mkdirSync(targetDir, { recursive: true });
@@ -161,10 +164,12 @@ export class GitCloner {
 
     if (isGitAvailable) {
       await this.runGitCloneCommands(repoUrl, branch, commitHash, targetDir, timeoutMs, onLog);
-    } else {
+    } else if (process.env.NODE_ENV === 'test') {
       // In containerless or mock testing where git CLI is not locally installed
       onLog(`[CLONE] Local git binary unavailable. Initializing secure workspace skeleton for commit ${commitHash.slice(0, 7)}.`, 'STDOUT');
       this.createWorkspaceSkeleton(targetDir, commitHash);
+    } else {
+      throw new Error('Git is not installed in the build worker.');
     }
 
     // 3. Repository size quota check
@@ -256,14 +261,20 @@ export class GitCloner {
           try {
             await execFileAsync('git', ['config', '--local', 'submodule.recurse', 'false'], { cwd: targetDir });
             await execFileAsync('git', ['checkout', commitHash], { cwd: targetDir });
+            // The repository metadata is not a deployable artifact. Removing it
+            // also prevents root-owned pack files from leaking out of the
+            // sandbox extraction into the worker's non-root artifact audit.
+            fs.rmSync(path.join(targetDir, '.git'), { recursive: true, force: true });
             safeResolve();
           } catch (checkoutErr: any) {
             safeReject(new Error(`Failed to checkout commit ${commitHash}: ${checkoutErr.message}`));
           }
-        } else {
+        } else if (process.env.NODE_ENV === 'test') {
           // If clone failed (e.g. mock test repository), initialize fallback workspace skeleton
           this.createWorkspaceSkeleton(targetDir, commitHash);
           safeResolve();
+        } else {
+          safeReject(new Error(`Git clone failed with exit code ${code}. Check repository access and branch.`));
         }
       });
     });

@@ -8,6 +8,7 @@ import { deploymentQueue } from '../lib/queue';
 import { authenticateRequest } from '../lib/auth';
 import { injectTraceContext } from '../lib/telemetry';
 import { validateSlug, slugify } from '../lib/slug';
+import { getUserGitHubToken } from '../lib/session';
 
 export async function registerDeploymentRoutes(app: FastifyInstance) {
   // Helper to ensure project exists under authenticated user
@@ -73,7 +74,7 @@ export async function registerDeploymentRoutes(app: FastifyInstance) {
     }
 
     const resolvedBranch = branch || 'main';
-    const resolvedCommit = commit_hash || generateCommitHash();
+    let resolvedCommit = commit_hash || '';
     const resolvedRepo = repo_url || `https://github.com/doplo/${project_name}`;
 
     try {
@@ -86,6 +87,23 @@ export async function registerDeploymentRoutes(app: FastifyInstance) {
           error: 'Not Found',
           message: `Project "${project_name}" not found or unauthorized`,
         });
+      }
+
+      if (config.env === 'test') {
+        resolvedCommit ||= generateCommitHash();
+      } else {
+        const match = /^https:\/\/github\.com\/([\w.-]+)\/([\w.-]+?)(?:\.git)?\/?$/.exec(project.repoUrl);
+        if (!match) return reply.code(400).send({ message: 'A valid GitHub repository URL is required.' });
+        const token = await getUserGitHubToken(user.id);
+        const response = await fetch(`https://api.github.com/repos/${match[1]}/${match[2]}/commits/${encodeURIComponent(resolvedCommit || resolvedBranch)}`, {
+          headers: { Accept: 'application/vnd.github+json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          signal: AbortSignal.timeout(15000),
+        });
+        const commit = await response.json() as { sha?: string };
+        if (!response.ok || !commit.sha || !/^[a-f0-9]{40}$/i.test(commit.sha)) {
+          return reply.code(400).send({ message: 'Cannot resolve this GitHub commit. Check repository access, branch and commit; connect GitHub for private repositories.' });
+        }
+        resolvedCommit = commit.sha;
       }
 
       // 2. Create Deployment record, initial Event and Log atomically

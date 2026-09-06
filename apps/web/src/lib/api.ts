@@ -153,20 +153,24 @@ export const api = {
     return res.providers;
   },
 
-  async register(data: { email: string; password: string; name: string }): Promise<AuthUser> {
-    const res = await fetchJson<{ success: boolean; user: AuthUser }>('/api/auth/register', {
+  async register(data: { email: string; password: string; name: string }): Promise<{ verificationRequired?: boolean }> {
+    const res = await fetchJson<{ verificationRequired?: boolean }>('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
     });
-    return res.user;
+    return res;
   },
 
-  async login(data: { email: string; password: string }): Promise<AuthUser> {
-    const res = await fetchJson<{ success: boolean; user: AuthUser }>('/api/auth/login', {
+  async login(data: { email: string; password: string }): Promise<{ verificationRequired?: boolean }> {
+    const res = await fetchJson<{ verificationRequired?: boolean }>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
     });
-    return res.user;
+    return res;
+  },
+
+  async verifyEmail(token: string): Promise<void> {
+    await fetchJson('/api/auth/verify-email', { method: 'POST', body: JSON.stringify({ token }) });
   },
 
   async logout(): Promise<void> {

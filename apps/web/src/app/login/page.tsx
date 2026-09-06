@@ -13,8 +13,14 @@ export default function LoginPage() {
   const [providers, setProviders] = useState({ email: true, github: false, google: false });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
 
   useEffect(() => {
+    const token = new URLSearchParams(window.location.hash.slice(1)).get('verify');
+    if (token) {
+      window.history.replaceState(null, '', '/login');
+      api.verifyEmail(token).then(() => setNotice('Email verified. You can now sign in.')).catch((e) => setError(e.message));
+    }
     api
       .getCurrentUser()
       .then((user) => {
@@ -33,20 +39,25 @@ export default function LoginPage() {
     setError('');
     const data = new FormData(event.currentTarget);
     try {
+      let result: { verificationRequired?: boolean };
       if (registering) {
-        await api.register({
+        result = await api.register({
           name: String(data.get('name') || ''),
           email: String(data.get('email') || ''),
           password: String(data.get('password') || ''),
         });
       } else {
-        await api.login({
+        result = await api.login({
           email: String(data.get('email') || ''),
           password: String(data.get('password') || ''),
         });
       }
+      if (result.verificationRequired) {
+        setNotice('Check your inbox and spam folder. Verify your email, then sign in. Submit this form again after a minute to resend.');
+        return;
+      }
       const next = new URLSearchParams(window.location.search).get('next');
-      router.replace(next?.startsWith('/') ? next : '/');
+      router.replace(next?.startsWith('/') && !next.startsWith('//') && !next.includes('\\') ? next : '/');
       router.refresh();
     } catch (value) {
       setError(value instanceof Error ? value.message : 'Sign-in failed. Please try again.');
@@ -102,6 +113,7 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={submit} className="space-y-4">
+            {notice && <p role="status" className="text-sm text-blue-300">{notice}</p>}
             {registering && (
               <label className="block text-sm text-zinc-300">
                 Name

@@ -33,11 +33,17 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       GOOGLE_CALLBACK_URL: https://doplo.dev/api/auth/google/callback
+      BREVO_API_KEY: ${BREVO_API_KEY:-}
+      MAIL_FROM_EMAIL: ${MAIL_FROM_EMAIL:-}
     ports: !reset []
 
   worker:
     environment:
       NODE_ENV: production
+      BASE_DOMAIN: doplo.dev
+      APP_DOMAIN: doplo.dev
+      APP_URL: https://doplo.dev
+      API_URL: https://doplo.dev
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
 
   web:

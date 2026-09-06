@@ -166,7 +166,7 @@ export async function registerAuthRoutes(app: FastifyInstance) {
     let accessToken: string;
 
     // In test environment or mock code, use deterministic test user credentials
-    if (config.env === 'test' || code.startsWith('mock_code_')) {
+    if (config.env === 'test') {
       githubUserId = 'gh_mock_12345';
       githubUsername = 'github_test_user';
       githubEmail = 'github_test_user@doplo.local';
@@ -234,7 +234,8 @@ export async function registerAuthRoutes(app: FastifyInstance) {
           ? emails.find((e) => e.primary && e.verified)?.email ||
             emails.find((e) => e.verified)?.email
           : null;
-        githubEmail = verifiedEmail || `${ghUser.login}@users.noreply.github.com`;
+        if (!verifiedEmail) return reply.code(400).send({ message: 'A verified GitHub email is required.' });
+        githubEmail = verifiedEmail;
       } catch (exchangeErr: any) {
         return reply.code(502).send({
           statusCode: 502,
@@ -253,6 +254,7 @@ export async function registerAuthRoutes(app: FastifyInstance) {
           where: { id: existing.id },
           data: {
             githubId: githubUserId,
+            ...(!existing.emailVerified ? { passwordHash: null } : {}),
             emailVerified: true,
             username: githubUsername,
             avatarUrl,

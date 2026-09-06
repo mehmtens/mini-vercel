@@ -136,6 +136,7 @@ export async function registerGoogleAuthRoutes(app: FastifyInstance) {
             where: { id: existing.id },
             data: {
               googleId: profile.sub,
+              ...(!existing.emailVerified ? { passwordHash: null } : {}),
               emailVerified: true,
               avatarUrl: existing.avatarUrl || profile.picture || null,
             },

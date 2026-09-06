@@ -526,7 +526,19 @@ export function createWorker(customConnection?: Redis): Worker<DeploymentJobPayl
   const worker = new Worker<DeploymentJobPayload>(
     config.queue.name,
     async (job: Job<DeploymentJobPayload>) => {
-      await processDeploymentJob(job.data);
+      try {
+        await processDeploymentJob(job.data);
+      } catch (error) {
+        if (isUuid(job.data.deployment_id)) {
+          await transitionDeploymentState(prisma, {
+            deploymentId: job.data.deployment_id,
+            toStatus: DeploymentStatus.FAILED,
+            errorMessage: error instanceof Error ? error.message : 'Build job failed',
+            logMessage: '[ERROR] Build job rejected or failed. See deployment error for details.',
+          });
+        }
+        throw error;
+      }
     },
     {
       connection: customConnection || redisConnection,

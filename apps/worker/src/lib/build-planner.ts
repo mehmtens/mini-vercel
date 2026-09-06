@@ -66,7 +66,9 @@ export class BuildPlanner {
     // Determine install command
     let installCommand = overrides?.installCommand;
     if (!installCommand) {
-      if (packageManager === 'pnpm') {
+      if (framework === 'static' && !pkgJson) {
+        installCommand = 'true';
+      } else if (packageManager === 'pnpm') {
         installCommand = 'pnpm install --frozen-lockfile';
       } else if (packageManager === 'yarn') {
         installCommand = 'yarn install --frozen-lockfile';
