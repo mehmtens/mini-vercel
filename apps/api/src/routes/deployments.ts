@@ -391,10 +391,12 @@ export async function registerDeploymentRoutes(app: FastifyInstance) {
       });
     }
 
+    const cancelledDeployment = await prisma.deployment.findUnique({ where: { id } });
+
     return reply.send({
       success: true,
       message: 'Deployment cancelled successfully',
-      data: result.deployment,
+      data: cancelledDeployment,
     });
   };
 

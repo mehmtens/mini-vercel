@@ -186,7 +186,10 @@ export class BuildPlanner {
     if (deps?.['react-scripts']) {
       return 'create-react-app';
     }
-    if (fs.existsSync(path.join(dir, 'index.html')) && !pkgJson?.scripts?.build) {
+    if (
+      (fs.existsSync(path.join(dir, 'index.html')) || fs.existsSync(path.join(dir, 'public', 'index.html'))) &&
+      !pkgJson?.scripts?.build
+    ) {
       return 'static';
     }
 

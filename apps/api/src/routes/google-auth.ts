@@ -8,6 +8,13 @@ interface GoogleStateCookie {
   state: string;
   codeVerifier: string;
   createdAt: number;
+  returnTo?: string;
+}
+
+function safeReturnPath(value: unknown): string {
+  return typeof value === 'string' && value.startsWith('/') && !value.startsWith('//') && !value.includes('\\')
+    ? value
+    : '/';
 }
 
 function googleEnabled() {
@@ -39,7 +46,12 @@ export async function registerGoogleAuthRoutes(app: FastifyInstance) {
     const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
     reply.setCookie(
       'google_oauth_state',
-      JSON.stringify({ state, codeVerifier, createdAt: Date.now() }),
+      JSON.stringify({
+        state,
+        codeVerifier,
+        createdAt: Date.now(),
+        returnTo: safeReturnPath((req.query as { next?: string }).next),
+      }),
       {
         path: '/',
         httpOnly: true,
@@ -152,7 +164,7 @@ export async function registerGoogleAuthRoutes(app: FastifyInstance) {
           });
 
       await issueSessionCookie(reply, user);
-      return reply.redirect(`${config.app.url}/`);
+      return reply.redirect(new URL(safeReturnPath(cookieState.returnTo), config.app.url).toString());
     } catch (errorValue) {
       req.log.error({ err: errorValue }, 'Google OAuth communication failed');
       return reply.code(502).send({ message: 'Could not communicate with Google.' });

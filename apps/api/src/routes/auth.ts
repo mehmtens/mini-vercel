@@ -10,6 +10,13 @@ interface OAuthStateCookie {
   state: string;
   codeVerifier: string;
   createdAt: number;
+  returnTo?: string;
+}
+
+function safeReturnPath(value: unknown): string {
+  return typeof value === 'string' && value.startsWith('/') && !value.startsWith('//') && !value.includes('\\')
+    ? value
+    : '/';
 }
 
 export async function registerAuthRoutes(app: FastifyInstance) {
@@ -38,6 +45,7 @@ export async function registerAuthRoutes(app: FastifyInstance) {
       state,
       codeVerifier,
       createdAt: Date.now(),
+      returnTo: safeReturnPath((req.query as { next?: string })?.next),
     };
 
     // Store state and codeVerifier in short-lived HttpOnly signed cookie (10 min TTL)
@@ -312,7 +320,7 @@ export async function registerAuthRoutes(app: FastifyInstance) {
       });
     }
 
-    return reply.redirect(`${config.app.url}/`);
+    return reply.redirect(new URL(safeReturnPath(cookieStateData.returnTo), config.app.url).toString());
   };
 
   // ----------------------------------------------------

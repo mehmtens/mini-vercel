@@ -67,7 +67,11 @@ export default function LoginPage() {
   }
 
   function oauth(provider: 'google' | 'github') {
-    router.push(`${API_BASE}/api/auth/${provider}/login`);
+    const requestedNext = new URLSearchParams(window.location.search).get('next');
+    const safeNext = requestedNext?.startsWith('/') && !requestedNext.startsWith('//') && !requestedNext.includes('\\')
+      ? requestedNext
+      : '/';
+    router.push(`${API_BASE}/api/auth/${provider}/login?next=${encodeURIComponent(safeNext)}`);
   }
 
   return (

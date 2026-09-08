@@ -54,7 +54,7 @@ const FRAMEWORK_PRESETS = [
     name: 'HTML / Static',
     icon: '📄',
     buildCommand: 'echo "Static build complete"',
-    outputDir: 'public',
+    outputDir: '.',
     installCommand: '',
   },
   {
@@ -107,7 +107,7 @@ export default function NewProjectPage() {
 
   const connectGithub = () => {
     const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
-    window.location.href = `${apiBase}/api/auth/github/login`;
+    router.push(`${apiBase}/api/auth/github/login?next=${encodeURIComponent('/new')}`);
   };
 
   const selectGithubRepo = (fullName: string) => {
